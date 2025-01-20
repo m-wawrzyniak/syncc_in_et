@@ -1,0 +1,11 @@
+26.3119 	EXP 	Created window1 = Window(allowGUI=True, allowStencil=False, autoLog=True, backendConf=UNKNOWN, backgroundFit=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000018D97005F30>, backgroundImage=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000018D97005ED0>, bitsMode=UNKNOWN, blendMode='avg', bpc=(8, 8, 8), color=array([1., 1., 1.]), colorSpace='rgb', depthBits=8, fullscr=True, gamma=None, gammaErrorPolicy='raise', infoMsg=UNKNOWN, lms=UNKNOWN, monitor=<psychopy.monitors.calibTools.Monitor object at 0x0000018D97113EB0>, multiSample=False, name='window1', numSamples=2, pos=(-2560, -209), screen=1, size=array([2560, 1440]), stencilBits=0, stereo=False, title='PsychoPy', units='norm', useFBO=True, useRetina=False, viewOri=0.0, viewPos=None, viewScale=None, waitBlanking=True, winType='pyglet')
+26.3120 	EXP 	window1: backgroundImage = None
+26.3120 	EXP 	window1: backgroundFit = 'cover'
+26.7468 	EXP 	Created window1 = Window(allowGUI=True, allowStencil=False, autoLog=True, backendConf=UNKNOWN, backgroundFit=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000018D97005F30>, backgroundImage=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000018D97005ED0>, bitsMode=UNKNOWN, blendMode='avg', bpc=(8, 8, 8), color=array([1., 1., 1.]), colorSpace='rgb', depthBits=8, fullscr=False, gamma=None, gammaErrorPolicy='raise', infoMsg=UNKNOWN, lms=UNKNOWN, monitor=<psychopy.monitors.calibTools.Monitor object at 0x0000018D9D6C3760>, multiSample=False, name='window1', numSamples=2, pos=(640, 300), screen=0, size=array([640, 480]), stencilBits=0, stereo=False, title='PsychoPy', units='norm', useFBO=True, useRetina=False, viewOri=0.0, viewPos=None, viewScale=None, waitBlanking=True, winType='pyglet')
+26.7469 	EXP 	window1: backgroundImage = None
+26.7469 	EXP 	window1: backgroundFit = 'cover'
+26.7484 	EXP 	window1: Attempting to measure frame rate of screen (1) ...
+26.7484 	EXP 	window1: recordFrameIntervals = False
+26.9122 	EXP 	window1: recordFrameIntervals = True
+27.0954 	EXP 	Screen (1) actual frame rate measured at 60.00Hz
+27.0955 	EXP 	window1: recordFrameIntervals = False

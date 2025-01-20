@@ -1,0 +1,20 @@
+12.1968 	EXP 	Created window1 = Window(allowGUI=True, allowStencil=False, autoLog=True, backendConf=UNKNOWN, bitsMode=UNKNOWN, blendMode='avg', bpc=(8, 8, 8), color=array([1., 1., 1.]), colorSpace='rgb', depthBits=8, fullscr=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000024BE794C880>, gamma=None, gammaErrorPolicy='raise', lms=UNKNOWN, monitor=<psychopy.monitors.calibTools.Monitor object at 0x0000024BE807DBA0>, multiSample=False, name='window1', numSamples=2, pos=(-2560, -209), screen=1, size=array([2560, 1440]), stencilBits=0, stereo=False, units='norm', useFBO=True, useRetina=False, viewOri=0.0, viewPos=None, viewScale=None, waitBlanking=True, winType='pyglet')
+12.1969 	EXP 	window1: mouseVisible = True
+12.1970 	EXP 	window1: mouseVisible = True
+13.5393 	EXP 	Created window1 = Window(allowGUI=True, allowStencil=False, autoLog=True, backendConf=UNKNOWN, bitsMode=UNKNOWN, blendMode='avg', bpc=(8, 8, 8), color=array([1., 1., 1.]), colorSpace='rgb', depthBits=8, fullscr=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000024BE794C880>, gamma=None, gammaErrorPolicy='raise', lms=UNKNOWN, monitor=<psychopy.monitors.calibTools.Monitor object at 0x0000024BE807DC60>, multiSample=False, name='window1', numSamples=2, pos=(640, 300), screen=0, size=array([640, 480]), stencilBits=0, stereo=False, units='norm', useFBO=True, useRetina=False, viewOri=0.0, viewPos=None, viewScale=None, waitBlanking=True, winType='pyglet')
+13.5394 	EXP 	window1: mouseVisible = True
+16.5378 	EXP 	Created unnamed TextStim = TextStim(__class__=<class 'psychopy.visual.text.TextStim'>, alignHoriz=method-wrapper(...), alignText='center', alignVert=method-wrapper(...), anchorHoriz='center', anchorVert='center', antialias=True, autoDraw=False, autoLog=True, bold=False, color=array([-1, -1, -1]), colorSpace='rgb', contrast=1.0, depth=0, flipHoriz=False, flipVert=False, font='', fontFiles=[], height=0.1, italic=False, languageStyle='LTR', name='unnamed TextStim', opacity=1.0, ori=0.0, pos=array([0., 0.]), rgb=UNKNOWN, text=str(...), units='norm', win=Window(...), wrapWidth=1)
+18.6483 	DATA 	Keypress: x
+18.8259 	EXP 	Created unnamed MovieStim3 = MovieStim3(__class__=<class 'psychopy.visual.movie3.MovieStim3'>, anchor=('center', 'center'), autoLog=True, color=UNKNOWN, colorSpace=UNKNOWN, depth=0.0, filename=str(...), flipHoriz=False, flipVert=False, fps=UNKNOWN, interpolate=True, loop=False, name='unnamed MovieStim3', noAudio=False, opacity=1, ori=method-wrapper(...), pos=array([0., 0.]), size=None, units='pix', vframe_callback=UNKNOWN, volume=UNKNOWN, win=Window(...))
+19.1050 	WARNING 	0.279006400029175: Video catchup needed, advancing self._nextFrameT from 0.0 to 0.05
+19.1050 	WARNING 	0.27906550001353025: Video catchup needed, advancing self._nextFrameT from 0.05 to 0.1
+19.1050 	WARNING 	0.27910409995820373: Video catchup needed, advancing self._nextFrameT from 0.1 to 0.15000000000000002
+19.1051 	WARNING 	0.27914290002081543: Video catchup needed, advancing self._nextFrameT from 0.15000000000000002 to 0.2
+19.1980 	EXP 	unnamed MovieStim3: autoLog = True
+19.1980 	EXP 	unnamed MovieStim3: movie = 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//calib_intro_20.wmv'
+19.1980 	EXP 	unnamed MovieStim3: ori = 0.0
+19.1980 	EXP 	unnamed MovieStim3: autoDraw = True
+24.2226 	EXP 	window1: mouseVisible = True
+24.2360 	EXP 	Created unnamed TextStim = TextStim(__class__=<class 'psychopy.visual.text.TextStim'>, alignHoriz=method-wrapper(...), alignText='center', alignVert=method-wrapper(...), anchorHoriz='center', anchorVert='center', antialias=True, autoDraw=False, autoLog=True, bold=False, color=array([-1, -1, -1]), colorSpace='rgb', contrast=1.0, depth=0, flipHoriz=False, flipVert=False, font='', fontFiles=[], height=0.1, italic=False, languageStyle='LTR', name='unnamed TextStim', opacity=1.0, ori=0.0, pos=array([0., 0.]), rgb=UNKNOWN, text='dupsko', units='norm', win=Window(...), wrapWidth=1)
+29.3737 	DATA 	Keypress: x
+29.4392 	EXP 	window1: mouseVisible = True
