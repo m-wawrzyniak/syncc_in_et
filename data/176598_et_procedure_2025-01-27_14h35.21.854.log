@@ -1,0 +1,26 @@
+36.1845 	EXP 	Created window1 = Window(allowGUI=True, allowStencil=False, autoLog=True, backendConf=UNKNOWN, bitsMode=UNKNOWN, blendMode='avg', bpc=(8, 8, 8), color=array([1., 1., 1.]), colorSpace='rgb', depthBits=8, fullscr=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000013DB957C760>, gamma=None, gammaErrorPolicy='raise', lms=UNKNOWN, monitor=<psychopy.monitors.calibTools.Monitor object at 0x0000013DB9C8A260>, multiSample=False, name='window1', numSamples=2, pos=(-2560, -209), screen=1, size=array([2560, 1440]), stencilBits=0, stereo=False, units='norm', useFBO=True, useRetina=False, viewOri=0.0, viewPos=None, viewScale=None, waitBlanking=True, winType='pyglet')
+36.1847 	EXP 	window1: mouseVisible = True
+36.1848 	EXP 	window1: mouseVisible = True
+36.7178 	EXP 	Created window1 = Window(allowGUI=True, allowStencil=False, autoLog=True, backendConf=UNKNOWN, bitsMode=UNKNOWN, blendMode='avg', bpc=(8, 8, 8), color=array([1., 1., 1.]), colorSpace='rgb', depthBits=8, fullscr=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000013DB957C760>, gamma=None, gammaErrorPolicy='raise', lms=UNKNOWN, monitor=<psychopy.monitors.calibTools.Monitor object at 0x0000013DB9C8A320>, multiSample=False, name='window1', numSamples=2, pos=(640, 300), screen=0, size=array([640, 480]), stencilBits=0, stereo=False, units='norm', useFBO=True, useRetina=False, viewOri=0.0, viewPos=None, viewScale=None, waitBlanking=True, winType='pyglet')
+36.7179 	EXP 	window1: mouseVisible = True
+43.8605 	EXP 	Created unnamed TextStim = TextStim(__class__=<class 'psychopy.visual.text.TextStim'>, alignHoriz=method-wrapper(...), alignText='center', alignVert=method-wrapper(...), anchorHoriz='center', anchorVert='center', antialias=True, autoDraw=False, autoLog=True, bold=False, color=array([-1, -1, -1]), colorSpace='rgb', contrast=1.0, depth=0, flipHoriz=False, flipVert=False, font='', fontFiles=[], height=0.1, italic=False, languageStyle='LTR', name='unnamed TextStim', opacity=1.0, ori=0.0, pos=array([0., 0.]), rgb=UNKNOWN, text=str(...), units='norm', win=Window(...), wrapWidth=1)
+48.4305 	DATA 	Keypress: x
+48.9308 	EXP 	Created unnamed MovieStim3 = MovieStim3(__class__=<class 'psychopy.visual.movie3.MovieStim3'>, anchor=('center', 'center'), autoLog=True, color=UNKNOWN, colorSpace=UNKNOWN, depth=0.0, filename=str(...), flipHoriz=False, flipVert=False, fps=UNKNOWN, interpolate=True, loop=False, name='unnamed MovieStim3', noAudio=False, opacity=1, ori=method-wrapper(...), pos=array([0., 0.]), size=None, units='pix', vframe_callback=UNKNOWN, volume=UNKNOWN, win=Window(...))
+49.6797 	WARNING 	0.7488009999506176: Video catchup needed, advancing self._nextFrameT from 0.0 to 0.05
+49.6797 	WARNING 	0.7488431998062879: Video catchup needed, advancing self._nextFrameT from 0.05 to 0.1
+49.6797 	WARNING 	0.7488640998490155: Video catchup needed, advancing self._nextFrameT from 0.1 to 0.15000000000000002
+49.6797 	WARNING 	0.7488837998826057: Video catchup needed, advancing self._nextFrameT from 0.15000000000000002 to 0.2
+49.6798 	WARNING 	0.7489024999085814: Video catchup needed, advancing self._nextFrameT from 0.2 to 0.25
+49.6798 	WARNING 	0.7489204998128116: Video catchup needed, advancing self._nextFrameT from 0.25 to 0.3
+49.6798 	WARNING 	0.7489385998342186: Video catchup needed, advancing self._nextFrameT from 0.3 to 0.35
+49.6798 	WARNING 	0.7489561999682337: Video catchup needed, advancing self._nextFrameT from 0.35 to 0.39999999999999997
+49.6798 	WARNING 	0.7489746999926865: Video catchup needed, advancing self._nextFrameT from 0.39999999999999997 to 0.44999999999999996
+49.6798 	WARNING 	0.7489933997858316: Video catchup needed, advancing self._nextFrameT from 0.44999999999999996 to 0.49999999999999994
+49.6799 	WARNING 	Max reportNDroppedFrames reached, will not log any more dropped frames
+50.1550 	EXP 	unnamed MovieStim3: autoLog = True
+50.1550 	EXP 	unnamed MovieStim3: movie = 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//calib_intro_20.wmv'
+50.1550 	EXP 	unnamed MovieStim3: ori = 0.0
+50.1550 	EXP 	unnamed MovieStim3: autoDraw = True
+50.1559 	WARNING 	0.8100517999846488: Video catchup needed, advancing self._nextFrameT from 0.65 to 0.7000000000000001
+50.1560 	WARNING 	0.8101053000427783: Video catchup needed, advancing self._nextFrameT from 0.7000000000000001 to 0.7500000000000001
+55.1745 	EXP 	window1: mouseVisible = True

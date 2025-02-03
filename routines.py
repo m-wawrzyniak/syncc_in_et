@@ -66,7 +66,7 @@ def run_routine(win, routine_components, routine_timer, defaultKeyboard, msg='Ru
 
 def interrupt(msg, win, keys=('x',)):
     print(msg)
-    message = visual.TextStim(win, text=msg, color='black')
+    message = visual.TextStim(win, text=msg, color='white')
     message.draw()
     win.flip()
     _ = event.waitKeys(keyList=keys)

@@ -2,6 +2,7 @@
 from psychopy import sound, gui, visual, core, data, event, logging, clock, colors, layout
 import psychopy.iohub as io
 from psychopy.hardware import keyboard
+import ast
 
 # Own Imports
 import comms
@@ -16,7 +17,9 @@ endExpNow = False  # flag for 'escape' or other condition => quit the exp
 frameTolerance = 0.005  # how close to onset before 'same' frame
 
 # Setup windows for procedure
-win, win_master, gigabyte_mon, test_mon = procedure_setup.setup_windows()
+bckgnd_clr_str = expInfo['window background color']  # Get bckgnd color from UI
+bckgnd_clr = ast.literal_eval(bckgnd_clr_str)  # Convert it to a list of RGB
+win, win_master, gigabyte_mon, test_mon = procedure_setup.setup_windows(background_clr=bckgnd_clr)  # Setup the windows
 
 # Setup input/output devices
 ioConfig = {}
@@ -45,7 +48,7 @@ ani_components = [calib_ani]
 
 routines.setup_routine_components(ani_components)
 comms.send_annotation(pub_master, pub_slave, "start_calib_animation", req_master)
-routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib animation...', duration=5)
+routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib animation...', duration=3)
 comms.send_annotation(pub_master, pub_slave, "stop_calib_animation", req_master)
 win.close()
 del win
@@ -53,10 +56,10 @@ del win
 # INTERRUPT : Calibration
 # Master calibration
 routines.interrupt('Press \'x\' to begin master calibration...', win_master)
-#master_ang, master_prec = routines.run_calibration(req_master, sub_master)
+# master_ang, master_prec = routines.run_calibration(req_master, sub_master)
 # Slave calibration
 routines.interrupt('Press \'x\' to begin slave calibration...', win_master)
-#slave_ang, slave_prec = routines.run_calibration(req_slave, sub_slave)
+# slave_ang, slave_prec = routines.run_calibration(req_slave, sub_slave)
 
 # INTERRUPT: Set master monitor as main
 routines.interrupt('Press \'x\' when master monitor input is set...', win_master)
@@ -71,18 +74,22 @@ print("Recording has started")
 win = visual.Window(
     size=[2560, 1440], fullscr=True, screen=1,
     winType='pyglet', allowStencil=False,
-    monitor=gigabyte_mon, color=[1.0000, 1.0000, 1.0000], colorSpace='rgb',
+    monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
     blendMode='avg', useFBO=True,
     units='height')
 win.flip()
 print('New window created...')
 
 # Initializing stimuli
-movies, rand_movies, photo_rect_on, photo_rect_off, cross = procedure_setup.setup_main_stimuli(win)
+photo_pos = (1, 0)  # Normalized position of photodiode on the screen
+movies, rand_movies, photo_rect_on, photo_rect_off, cross = procedure_setup.setup_main_stimuli(win, photo_pos=photo_pos)
 expInfo['mov_order'] = rand_movies
+cross.draw()  # Draw focus cross before the first movie
+win.flip()  # Refresh window
 
 # INTERRUPT: Start main procedure
 routines.interrupt('Press \'x\' to begin stimulus procedure...', win_master)
+win.flip() # Refresh window
 
 # ROUTINE: Movies presentation
 
@@ -98,7 +105,7 @@ for i in range(len(rand_movies)):
 
     # Running routine
     routines.run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, routineTimer,
-                                  thisExp, defaultKeyboard, movie_duration=5)
+                                  thisExp, defaultKeyboard, movie_duration=15)
 
     # Sending stop movie annotation
     comms.send_annotation(pub_master, pub_slave, label=f'stop_{str(mov_name)}', req_master=req_master)

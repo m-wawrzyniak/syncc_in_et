@@ -2,6 +2,7 @@ import os
 import zmq
 from time import  time
 import numpy as np
+
 from numpy.random import random, randint, normal, shuffle, choice as randchoice
 from psychopy import sound, gui, visual, core, data, event, logging, clock, colors, layout, monitors
 import comms
@@ -9,19 +10,29 @@ import psychopy.iohub as io
 from psychopy.hardware import keyboard
 
 def setup_path_and_log():
+    """
+    Setup paths and logs for ET procedure.
+
+    Returns:
+        - expInfo (dict) Dictionary of experiment information (name:value)
+        - thisExp (ExperimentHandler) ???
+        - logFile (LogFile) ???
+        - filename (str) Absolute path for saving all data and logs.
+    """
 
     # Path for saving logs
     _thisDir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(_thisDir)
 
-    # Info about experimental session
+    # Info about experimental session and what goes into GUI dialog
     psychopyVersion = '2024.2.4'
-    expName = 'et_procedure'
+    expName = 'et_syncc_in_procedure'
     expInfo = {
         'participant': f"{randint(0, 999999):06.0f}",
         'session': '001',
+        'window background color': '[0.0, 0.0, 0.0]'
     }
-    print(f"Stationary ET procedure, participant: {expInfo['participant']}")
+    print(f"Syncc-In ET procedure, participant: {expInfo['participant']}")
 
     # Participant info dialog
     session_win = True
@@ -50,7 +61,7 @@ def setup_path_and_log():
 
     return expInfo, thisExp, logFile, filename
 
-def setup_windows():
+def setup_windows(background_clr = None):
     all_monitors = monitors.getAllMonitors()
     print(f"Available monitors: {all_monitors}")
 
@@ -67,10 +78,13 @@ def setup_windows():
     test_monitor.setDistance(50)  # Distance from the screen in cm
     test_monitor.saveMon()  # Save the monitor configuration
 
+    if background_clr is None:
+        background_clr = [-1.0, -1.0, -1.0]
+
     win_main = visual.Window(
         size=[2560, 1440], fullscr=True, screen=1,
         winType='pyglet', allowStencil=False,
-        monitor=gigabyte_monitor, color=[1.0000, 1.0000, 1.0000], colorSpace='rgb',
+        monitor=gigabyte_monitor, color=background_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,
         units='norm')
     win_main.mouseVisible = True
@@ -78,7 +92,7 @@ def setup_windows():
     win_master = visual.Window(
         size=[640, 480], fullscr=False, screen=0,
         winType='pyglet', allowStencil=False,
-        monitor=test_monitor, color=[1.0000, 1.0000, 1.0000], colorSpace='rgb',
+        monitor=test_monitor, color=background_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,
         units='norm')
     print("Windows defined")
@@ -87,7 +101,7 @@ def setup_windows():
 
 def setup_pupil_comms():
     # Master PC
-    addr_master = "192.168.52.227" # Moje wifi
+    addr_master = "192.168.48.227" # Moje wifi
     # addr_master = "172.20.10.2"  # Wifi Asi
     port_master = "50020"
     comms.check_capture_exists(addr_master, port_master, 'Master')
@@ -123,7 +137,7 @@ def setup_pupil_comms():
                   "args": {'name': 'master_pupil', 'active_group': 'ET_exp'}})
 
     # Slave PC
-    addr_slave = "192.168.52.85"
+    addr_slave = "192.168.48.85"
     # addr_slave = "172.20.10.3"
     port_slave = "50020"
     comms.check_capture_exists(addr_slave, port_slave, 'Slave')
@@ -171,14 +185,14 @@ def setup_pupil_comms():
 
     return context_master, req_master, pub_master, sub_master, context_slave, req_slave, pub_slave, sub_slave
 
-def setup_main_stimuli(win):
+def setup_main_stimuli(win, photo_pos=(1, 0)):
     # Stim init
     print('Initializing stimuli...')
-    movie_1 = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//Video1_20.wmv', size=(2560, 1440))
+    movie_1 = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//Video1.mp4', size=(2560, 1440))
     print('m1 initialized...')
-    movie_2 = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//Video2_20.wmv', size=(2560, 1440))
+    movie_2 = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//Video2.mp4', size=(2560, 1440))
     print('m2 initialized...')
-    movie_3 = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//Video3_20.wmv', size=(2560, 1440))
+    movie_3 = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//Video3.mp4', size=(2560, 1440))
     print('m3 initialized...')
     movies = {'m1': movie_1, 'm2': movie_2, 'm3': movie_3}
     rand_movies = list(np.random.permutation(list(movies.keys())))
@@ -188,7 +202,7 @@ def setup_main_stimuli(win):
     photo_rect_on = visual.Rect(
         win=win, name='photo_rect_on',
         width=size * (9 / 16), height=size, units='norm',
-        ori=0.0, pos=(1, -1), anchor='bottom-right',
+        ori=0.0, pos=photo_pos, anchor='bottom-right',
         lineWidth=1.0, colorSpace='rgb', lineColor='white', fillColor='white',
         opacity=None, depth=0.0, interpolate=True)
 
@@ -196,21 +210,21 @@ def setup_main_stimuli(win):
     photo_rect_off = visual.Rect(
         win=win, name='photo_rect_off',
         width=size * (9 / 16), height=size, units='norm',
-        ori=0.0, pos=(1, -1), anchor='bottom-right',
+        ori=0.0, pos=photo_pos, anchor='bottom-right',
         lineWidth=1.0, colorSpace='rgb', lineColor='black', fillColor='black',
         opacity=None, depth=0.0, interpolate=True)
 
     # Cross stimuli init
     cross = cross = visual.ShapeStim(
-    win=win,
-    vertices='cross',  # Define shape as a cross
-    size=(2,2),  # Size of the cross (width and height)
-    lineWidth=1,  # Line thickness
-    lineColor='black',  # Line color (white)
-    fillColor='black',  # Fill color (white)
-    units='cm',  # Use normalized units
-    pos=(0, 0)  # Center of the screen
-)
+        win=win,
+        vertices='cross',  # Define shape as a cross
+        size=(2,2),  # Size of the cross (width and height)
+        lineWidth=1,  # Line thickness
+        lineColor='black',  # Line color (white)
+        fillColor='black',  # Fill color (white)
+        units='cm',  # Use normalized units
+        pos=(0, 0)  # Center of the screen
+        )
     photo_rect_off.draw()
     win.flip()
     return movies, rand_movies, photo_rect_on, photo_rect_off, cross
