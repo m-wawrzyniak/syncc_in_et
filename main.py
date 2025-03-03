@@ -41,14 +41,14 @@ routineTimer = core.Clock()  # to track time remaining of each (possibly non-sli
 # INTERRUPT: PRESS X TO BEGIN CALIB INSTRUCTION
 routines.interrupt('Press \'x\' to begin calibration instruction...', win_master)
 
-# ROUTINE: CALIB ANIMATION
+# ROUTINE: CALIB gANIMATION
 calib_ani = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//calib_intro_20.wmv',
                              size=(2560, 1440))
 ani_components = [calib_ani]
 
 routines.setup_routine_components(ani_components)
 comms.send_annotation(pub_master, pub_slave, "start_calib_animation", req_master)
-routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib animation...', duration=3)
+routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib animation...', duration=10)
 comms.send_annotation(pub_master, pub_slave, "stop_calib_animation", req_master)
 win.close()
 del win
@@ -59,7 +59,7 @@ routines.interrupt('Press \'x\' to begin master calibration...', win_master)
 # master_ang, master_prec = routines.run_calibration(req_master, sub_master)
 # Slave calibration
 routines.interrupt('Press \'x\' to begin slave calibration...', win_master)
-# slave_ang, slave_prec = routines.run_calibration(req_slave, sub_slave)
+#slave_ang, slave_prec = routines.run_calibration(req_slave, sub_slave)
 
 # INTERRUPT: Set master monitor as main
 routines.interrupt('Press \'x\' when master monitor input is set...', win_master)
@@ -105,12 +105,11 @@ for i in range(len(rand_movies)):
 
     # Running routine
     routines.run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, routineTimer,
-                                  thisExp, defaultKeyboard, movie_duration=15)
+                                  thisExp, defaultKeyboard, movie_duration=movie.duration)
 
     # Sending stop movie annotation
     comms.send_annotation(pub_master, pub_slave, label=f'stop_{str(mov_name)}', req_master=req_master)
 
-    # TODO: Fixed 10 seconds interval
     routines.setup_routine_components([cross])
     routines.run_routine(win, [cross], routineTimer, defaultKeyboard, duration=10)
 
@@ -131,9 +130,9 @@ context_master.destroy()
 context_slave.destroy()
 
 # VERBATIM: Saving logs and closing procedure
-thisExp.saveAsWideText(filename + '.csv', delim='auto')
+# thisExp.saveAsWideText(filename + '.csv', delim='auto')  # CSV doesn't save ExpInfo as supposed
 thisExp.saveAsPickle(filename)
 logging.flush()
-thisExp.abort()
+thisExp.abort()  # This will cancel ExperimentHandler save during core.quit()
 win.close()
 core.quit()

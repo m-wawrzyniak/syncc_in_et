@@ -2,3 +2,4 @@ PsychoPy==2022.2.5
 pyzmq==26.2.0
 msgpack==1.1.0
 numpy==1.23.5
+scapy~=2.6.1

@@ -118,7 +118,7 @@ def run_calibration(req_port, sub_port, debug_mode=False):
 
 def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, routineTimer, thisExp, defaultKeyboard,
                          movie_duration=None):
-    frameTolerance = 0.005
+    frameTolerance = 0 #0.005
     continueRoutine = True
     t = 0
     frameN = -1
@@ -198,6 +198,5 @@ def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, ro
             thisComponent.setAutoDraw(False)
     movie.stop()
     routineTimer.reset()
-
     photo_rect_on.setAutoDraw(False)
     photo_rect_off.setAutoDraw(True)

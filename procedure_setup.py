@@ -46,6 +46,7 @@ def setup_path_and_log():
 
     # Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
     filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
+    # TODO: Create one standardized directory with both recordings and psychopy logs/data
 
     # An ExperimentHandler isn't essential but helps with data saving
     thisExp = data.ExperimentHandler(name=expName, version='',
@@ -101,8 +102,11 @@ def setup_windows(background_clr = None):
 
 def setup_pupil_comms():
     # Master PC
-    addr_master = "192.168.48.227" # Moje wifi
+
+    # addr_master = "192.168.48.227" # Moje wifi
     # addr_master = "172.20.10.2"  # Wifi Asi
+    addr_master = "192.168.1.153"
+
     port_master = "50020"
     comms.check_capture_exists(addr_master, port_master, 'Master')
 
@@ -137,8 +141,11 @@ def setup_pupil_comms():
                   "args": {'name': 'master_pupil', 'active_group': 'ET_exp'}})
 
     # Slave PC
-    addr_slave = "192.168.48.85"
+
+    # addr_slave = "192.168.48.85"
     # addr_slave = "172.20.10.3"
+    addr_slave = "192.168.1.201"
+
     port_slave = "50020"
     comms.check_capture_exists(addr_slave, port_slave, 'Slave')
 
