@@ -12,13 +12,11 @@ def notify(pupil_remote, notification):
     pupil_remote.send(payload)
     return pupil_remote.recv_string()
 
-
 def send_trigger(pub_socket, trigger):
     """Sends annotation via PUB port"""
     payload = serializer.dumps(trigger, use_bin_type=True)
     pub_socket.send_string(trigger["topic"], flags=zmq.SNDMORE)
     pub_socket.send(payload)
-
 
 def check_capture_exists(ip_address, port, pc):
     """check pupil capture instance exists"""
@@ -41,4 +39,3 @@ def send_annotation(pub_master, pub_slave, label, req_master):
     }
     send_trigger(pub_master, trigger)
     send_trigger(pub_slave, trigger)
-

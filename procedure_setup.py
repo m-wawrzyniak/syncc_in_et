@@ -6,6 +6,7 @@ import numpy as np
 from numpy.random import random, randint, normal, shuffle, choice as randchoice
 from psychopy import sound, gui, visual, core, data, event, logging, clock, colors, layout, monitors
 import comms
+import msgpack
 import psychopy.iohub as io
 from psychopy.hardware import keyboard
 
@@ -100,13 +101,19 @@ def setup_windows(background_clr = None):
 
     return win_main, win_master, gigabyte_monitor, test_monitor
 
-def setup_pupil_comms():
-    # Master PC
+def setup_pupil_comms(wifi_source='wifi_nos'):
 
-    # addr_master = "192.168.48.227" # Moje wifi
-    # addr_master = "172.20.10.2"  # Wifi Asi
-    addr_master = "192.168.1.153"
+    # Dictionary format: key(wifi name) : tuple(addr_master, addr_slave)
+    addr_dict = {
+        'wifi_asia':("172.20.10.2", "172.20.10.3"),
+        'wifi_mati':("192.168.48.227", "192.168.48.85"),
+        'wifi_maciek':("192.168.224.227", "192.168.224.85"),
+        'wifi_nos':("192.168.1.153", "192.168.1.201")
+    }
 
+    addr_master, addr_slave = addr_dict[wifi_source]
+
+    # Master PC - ports and connections
     port_master = "50020"
     comms.check_capture_exists(addr_master, port_master, 'Master')
 
@@ -116,36 +123,21 @@ def setup_pupil_comms():
     req_master = context_master.socket(zmq.REQ)  # Master req
     req_master.connect("tcp://{}:{}".format(addr_master, port_master))
 
+    # pub: send info to other processes - we use it to send annotations to pupil capture
     req_master.send_string("PUB_PORT")  # Master pub
     pub_port_master = req_master.recv_string()
     pub_master = zmq.Socket(context_master, zmq.PUB)
     pub_master.connect("tcp://{}:{}".format(addr_master, pub_port_master))
 
+    # sub: listen to other processes - currently listens to the calibration parameters from pupil capture
     req_master.send_string("SUB_PORT")  # Master sub
     sub_port_master = req_master.recv_string()
     sub_master = context_master.socket(zmq.SUB)
     sub_master.connect("tcp://{}:{}".format(addr_master, sub_port_master))
     sub_master.setsockopt_string(zmq.SUBSCRIBE, 'logging')
-
     print("Master ports established")
-    # sub.setsockopt_string(zmq.SUBSCRIBE, 'notify.calibration')
 
-    # Starting master plugins
-    comms.notify(req_master, {"subject": "start_plugin", "name": "Annotation_Capture", "args": {}})
-    comms.notify(req_master,
-                 {"subject": "start_plugin", "name": "Time_Sync",
-                  "args": {'base_bias': 1.1, 'node_name': 'sync_master'}})
-    comms.notify(req_master, {"subject": "start_plugin", "name": "Log_History", "args": {}})
-    comms.notify(req_master,
-                 {"subject": "start_plugin", "name": "Pupil_Groups",
-                  "args": {'name': 'master_pupil', 'active_group': 'ET_exp'}})
-
-    # Slave PC
-
-    # addr_slave = "192.168.48.85"
-    # addr_slave = "172.20.10.3"
-    addr_slave = "192.168.1.201"
-
+    # Slave PC - ports and connections
     port_slave = "50020"
     comms.check_capture_exists(addr_slave, port_slave, 'Slave')
 
@@ -165,6 +157,25 @@ def setup_pupil_comms():
     sub_slave.connect("tcp://{}:{}".format(addr_slave, sub_port_slave))
     sub_slave.setsockopt_string(zmq.SUBSCRIBE, 'logging')
     print("Slave ports established")
+
+    # Safety-check: Stop recording if there is one.
+    rec_trigger = {'subject': 'recording.should_stop', "remote_notify": "all"}
+    comms.notify(req_master, rec_trigger)
+    comms.notify(req_slave, rec_trigger)
+
+    # Master PC - plugins
+    # sub.setsockopt_string(zmq.SUBSCRIBE, 'notify.calibration')
+    # Starting master plugins / "Time_Sync" - important for synchronising pupil cores, base_bias - higher value defines master
+    comms.notify(req_master, {"subject": "start_plugin", "name": "Annotation_Capture", "args": {}})
+    comms.notify(req_master,
+                 {"subject": "start_plugin", "name": "Time_Sync",
+                  "args": {'base_bias': 1.1, 'node_name': 'sync_master'}})
+    comms.notify(req_master, {"subject": "start_plugin", "name": "Log_History", "args": {}})
+    comms.notify(req_master,
+                 {"subject": "start_plugin", "name": "Pupil_Groups",
+                  "args": {'name': 'master_pupil', 'active_group': 'ET_exp'}})
+
+    # Slave PC - plugins
     # sub.setsockopt_string(zmq.SUBSCRIBE, 'notify.calibration')
 
     # Starting slave plugins
@@ -177,7 +188,7 @@ def setup_pupil_comms():
                  {"subject": "start_plugin", "name": "Pupil_Groups",
                   "args": {'name': 'slave_pupil', 'active_group': 'ET_exp'}})
 
-    # INTERRUPT: Begin recording
+    # TODO: to mozna logowac, a moze nawet zrobic check latencji
     t = time()
     req_master.send_string("t")
     req_master.recv_string()
@@ -189,6 +200,7 @@ def setup_pupil_comms():
     print(f'Slave timesync: {req_slave.recv_string()}')
 
     print('Pupil Communication established.')
+
 
     return context_master, req_master, pub_master, sub_master, context_slave, req_slave, pub_slave, sub_slave
 
