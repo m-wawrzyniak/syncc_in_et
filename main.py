@@ -5,6 +5,10 @@ Nomenclature:
     - Slave is the Dell laptop, running slave Pupil Capture instance.
     - User is the researcher, running the script
     - Subject is the research subject
+    - Subject monitor is the main presentation monitor, seen by the User.
+    - ROUTINE -> Code segment, PsychoPy-like structured while loop
+    - INTERRUPT -> Code segment, which requires the User intervention
+    - VERBATIM -> Code segment, without the need of the User intervention but takes some time
 The script function sequence is as follows:
     - PsychoPy log, directory and path setup
     - PsychoPy I/O devices, screen and windows setup
@@ -17,7 +21,14 @@ The script function sequence is as follows:
         - Redo if needed
     - Recording sub-procedure:
         - Start recording at both Pupil instances
-        -
+        - Initialize the stimuli (movies, photodiode marker and fixation cross)
+        - Stimuli presentation loop:
+            - Show movie for 60s
+            - Show fixation cross for 10s
+            - Continue
+        - Stop recording 
+    - Saving logs
+    - Cleaning up, closing communication ports etc.
 """
 
 
@@ -35,16 +46,16 @@ import routines
 # SETUP:
 
 # Specify path for log and data saving
-expInfo, thisExp, logFile, filename = procedure_setup.setup_path_and_log()
+expInfo, thisExp, logFile, filename = procedure_setup.setup_path_and_log()  # creating log files and saving paths
 endExpNow = False  # flag for 'escape' or other condition => quit the exp
 frameTolerance = 0.005  # how close to onset before 'same' frame
 
 # Setup windows for procedure
 bckgnd_clr_str = expInfo['window background color']  # Get bckgnd color from UI
 bckgnd_clr = ast.literal_eval(bckgnd_clr_str)  # Convert it to a list of RGB
-win, win_master, gigabyte_mon, test_mon = procedure_setup.setup_windows(background_clr=bckgnd_clr)  # Setup the windows
+win, win_master, gigabyte_mon, test_mon = procedure_setup.setup_windows(background_clr=bckgnd_clr)  # Setup the windows: win is seen on Subject monitor, win_master on Master monitor
 
-# Setup input/output devices
+# Setup input/output devices - standard PsychoPy segment
 ioConfig = {}
 ioConfig['Keyboard'] = dict(use_keymap='psychopy')
 ioServer = io.launchHubServer(window=win, **ioConfig)
@@ -53,7 +64,8 @@ ioSession = '1'
 if 'session' in expInfo:
     ioSession = str(expInfo['session'])
 
-# Setup Pupil/Psychopy comms
+# Setup Pupil/Psychopy comms using ZMQ library:
+# Creates ZMQ contexts and on this contexts REQ, SUB and PUB channels are established for both PCs. Also makes sure that both PCs have Pupil Capture instances.
 context_master, req_master, pub_master, sub_master, context_slave, req_slave, pub_slave, sub_slave = procedure_setup.setup_pupil_comms(wifi_source='wifi_nos')
 
 # Setup timers
@@ -62,38 +74,38 @@ routineTimer = core.Clock()  # to track time remaining of each (possibly non-sli
 
 
 # INTERRUPT: PRESS X TO BEGIN CALIB INSTRUCTION
-routines.interrupt('Press \'x\' to begin calibration instruction...', win_master)  # This will be seen on the researcher's screen (win_master)
+routines.interrupt('Press \'x\' to begin calibration instruction...', win_master)  # This will be seen on the User's screen (win_master)
 
 # ROUTINE: CALIB ANIMATION
 calib_ani = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//calib_intro_20.wmv',
-                             size=(2560, 1440)) # win - window seen by subjects
+                             size=(2560, 1440))  # Initializing calibration instruction movie for the Subjects
 ani_components = [calib_ani]
 
-routines.setup_routine_components(ani_components) # setup psychopy routine
-comms.send_annotation(pub_master, pub_slave, "start_calib_animation", req_master) # zmq sends info to pupil cores to  write to logs that the calibration instruction movie starts
-routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib animation...', duration=calib_ani.duration)
-comms.send_annotation(pub_master, pub_slave, "stop_calib_animation", req_master)
-win.close()
+routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
+comms.send_annotation(pub_master, pub_slave, "start_calib_animation", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
+routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib animation...', duration=calib_ani.duration)  # Present the instruction
+comms.send_annotation(pub_master, pub_slave, "stop_calib_animation", req_master)  # Annotate that animation has stopped
+win.close()  # Clean-up the Subject's window
 del win
 
 # INTERRUPT : Calibration
 # Master calibration
-routines.interrupt('Press \'x\' to begin master calibration...', win_master)
-master_ang, master_prec = routines.run_calibration(req_master, sub_master)
+routines.interrupt('Press \'x\' to begin master calibration...', win_master)  # Wait for the User's intervention
+master_ang, master_prec = routines.run_calibration(req_master, sub_master)  # Run calibration for Master Subject
 
-# TODO: Nowy interrupt, zeby zmienil input z pc slave
+# TODO: Interrupt, for changing HDMI input to Subject monitor
 
 # Slave calibration
 routines.interrupt('Press \'x\' to begin slave calibration...', win_master)
-slave_ang, slave_prec = routines.run_calibration(req_slave, sub_slave)
+slave_ang, slave_prec = routines.run_calibration(req_slave, sub_slave)  # Run calibration for Slave Subject
 
 # INTERRUPT: Set master monitor as main
 routines.interrupt('Press \'x\' when master monitor input is set...', win_master)
 
 # VERBATIM: Start recording
-rec_trigger = {'subject': 'recording.should_start', "remote_notify": "all"}
+rec_trigger = {'subject': 'recording.should_start', "remote_notify": "all"}  # Prepare recording trigger
 comms.notify(req_master, rec_trigger)
-comms.notify(req_slave, rec_trigger)
+comms.notify(req_slave, rec_trigger)  # Send it to both Pupil Capture Instances
 print("Recording has started")
 
 # TODO: Communicate to fNIRS, that recording started
@@ -110,8 +122,8 @@ print('New window created...')
 
 # Initializing stimuli
 photo_pos = (1, 0)  # Normalized position of photodiode on the screen
-movies, rand_movies, photo_rect_on, photo_rect_off, cross = procedure_setup.setup_main_stimuli(win, photo_pos=photo_pos)
-expInfo['mov_order'] = rand_movies
+movies, rand_movies, photo_rect_on, photo_rect_off, cross = procedure_setup.setup_main_stimuli(win, photo_pos=photo_pos)  # Setting up presented movies, photodiode marker and fixation cross
+expInfo['mov_order'] = rand_movies  # Save the order of the movies
 cross.draw()  # Draw focus cross before the first movie
 # TODO: Pytanie, czy informowac fNIRS o kazdej zmianie w procedurze ktora wplywa na to co widzi badany.
 win.flip()  # Refresh window
@@ -120,14 +132,13 @@ win.flip()  # Refresh window
 routines.interrupt('Press \'x\' to begin stimulus procedure...', win_master)
 win_master.flip() # Refresh window
 
-# ROUTINE: Movies presentation
-
+# ROUTINE: Movies presentation:
 for i in range(len(rand_movies)):
     # Movie setup
     mov_name = rand_movies[i] # Pick movie
     movie = movies[mov_name] # Pack it into components list
     routines.setup_routine_components([movie]) # Set it up for routine
-    movie.reset()  # Synchronizuje audio z video
+    movie.reset()  # Synchronize audio with video.
 
     # Sending start movie annotation
     comms.send_annotation(pub_master, pub_slave, label=f'start_{str(mov_name)}', req_master=req_master)
@@ -141,6 +152,7 @@ for i in range(len(rand_movies)):
     # Sending stop movie annotation
     comms.send_annotation(pub_master, pub_slave, label=f'stop_{str(mov_name)}', req_master=req_master)
 
+    # Setup and present fixation cross between the movies and at the end of movie sequence presentation
     routines.setup_routine_components([cross])
     routines.run_routine(win, [cross], routineTimer, defaultKeyboard, duration=10)
 
