@@ -10,6 +10,8 @@ import msgpack
 import psychopy.iohub as io
 from psychopy.hardware import keyboard
 
+# TODO: Proper argument and return types docstring
+
 def setup_path_and_log():
     """
     Setup paths and logs for ET procedure.
