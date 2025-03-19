@@ -3,10 +3,17 @@ from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
 from psychopy import visual, core, event
 import msgpack as serializer
 
+"""
+These functions are mostly based on common code segments used in PsychoPy
+They mostly serve to handle PsychoPy stimuli, windows and routine loops.
+"""
 
+# TODO: Proper argument and return types docstring
 
 def setup_routine_components(components):
-    """Initialize routine components."""
+    """
+    Initialize routine components.
+    """
     for comp in components:
         comp.tStart = None
         comp.tStop = None
@@ -16,6 +23,15 @@ def setup_routine_components(components):
             comp.status = NOT_STARTED
 
 def run_routine(win, routine_components, routine_timer, defaultKeyboard, msg='Running routine...', duration=None, escape_key="escape"):
+    # TODO: duration is not safe, without specyfing it the code crashes
+    """
+    Using specific window 'win' (psychopy.visual.Window), creates routine segment with routine_componentes (list of PsychoPy stimuli) and runs it.
+      routine_timer - (psychopy.core.Clock) Internal PsychoPy Clock
+      defaultKeyboard - (psychopy.keyboard.Keyboard) Keyboard used for User interface.
+      msg - (str) Message printed when run.
+      duration - (int|None) How long routine will be run 
+      escape_key - (str) String representation of the key which can be used to leave the routine. 
+    """
     print(msg)
 
     frameTolerance = 0.005
@@ -65,6 +81,9 @@ def run_routine(win, routine_components, routine_timer, defaultKeyboard, msg='Ru
             comp.setAutoDraw(False)
 
 def interrupt(msg, win, keys=('x',)):
+    '''
+    Prints msg (str) at win (psychopy.visual.Window) and waits for the User to press on of the keys (tuple)
+    '''
     print(msg)
     message = visual.TextStim(win, text=msg, color='white')
     message.draw()
@@ -74,6 +93,12 @@ def interrupt(msg, win, keys=('x',)):
 
 def run_calibration(req_port, sub_port, debug_mode=False):
     # TODO: Moze by tak upewniac sie ze kamery obu oczy sa wlaczone? wlasnie stracilismy na tym 5 min
+    '''
+    Runs calibration at specific PC, based on chosen req_port and sub_port (Context.socket).
+    Evaluates whether the calibration quality is satisfactory and gives the User a choice to accept the quality
+    or redo the calibration.
+    debug_mode = True -> there is only a dummy calibration
+    '''
     calib_done = False
     ang_acc, ang_prec = 0, 0
 
@@ -118,7 +143,16 @@ def run_calibration(req_port, sub_port, debug_mode=False):
 
 def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, routineTimer, thisExp, defaultKeyboard,
                          movie_duration=None):
-    frameTolerance = 0 #0.005
+    """
+    Using specific window 'win' (psychopy.visual.Window), creates routine segment with predefined stimuli: movies, photodiode marker and fixation cross.
+      routineTimer - (psychopy.core.Clock) Internal PsychoPy Clock
+      defaultKeyboard - (psychopy.keyboard.Keyboard) Keyboard used for User interface.
+      msg - (str) Message printed when run.
+      movie_duration - (int|None) How long routine will be run 
+      thisExp - (dict) PsychoPy log dictionary.
+    """
+                           
+    frameTolerance = 0.005 #0.005
     continueRoutine = True
     t = 0
     frameN = -1
