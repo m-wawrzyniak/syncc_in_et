@@ -163,7 +163,7 @@ def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, ro
 
     # Photodiode setup
     photo_rect_duration = movie_duration
-    photo_toggle_time = 0.25
+    photo_toggle_time = 0.5
     last_toggle_time = 0
     toggle_cnt = 0
     movie_id = int(mov_name[-1])

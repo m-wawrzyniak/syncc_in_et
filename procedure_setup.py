@@ -1,6 +1,6 @@
 import os
 import zmq
-from time import  time
+import time
 import numpy as np
 
 from numpy.random import random, randint, normal, shuffle, choice as randchoice
@@ -107,10 +107,11 @@ def setup_pupil_comms(wifi_source='wifi_nos'):
 
     # Dictionary format: key(wifi name) : tuple(addr_master, addr_slave)
     addr_dict = {
-        'wifi_asia':("172.20.10.2", "172.20.10.3"),
-        'wifi_mati':("192.168.48.227", "192.168.48.85"),
-        'wifi_maciek':("192.168.224.227", "192.168.224.85"),
-        'wifi_nos':("192.168.1.153", "192.168.1.201")
+        #'wifi_asia':("172.20.10.2", "172.20.10.3"),
+        #'wifi_mati':("192.168.48.227", "192.168.48.85"),
+        #'wifi_maciek':("192.168.224.227", "192.168.224.85"),
+        'wifi_nos':("192.168.1.153", "192.168.1.167"),
+        'hotspot_msi':("172.16.3.185", "192.168.137.128")
     }
 
     addr_master, addr_slave = addr_dict[wifi_source]
@@ -191,10 +192,10 @@ def setup_pupil_comms(wifi_source='wifi_nos'):
                   "args": {'name': 'slave_pupil', 'active_group': 'ET_exp'}})
 
     # TODO: to mozna logowac, a moze nawet zrobic check latencji
-    t = time()
+    t = time.time()
     req_master.send_string("t")
     req_master.recv_string()
-    print("Round trip Python<->Pupil command delay:", time() - t)
+    print("Round trip Python<->Pupil command delay:", time.time() - t)
 
     req_master.send_string("T 0.0")
     print(f'Master timesync: {req_master.recv_string()}')
@@ -203,17 +204,16 @@ def setup_pupil_comms(wifi_source='wifi_nos'):
 
     print('Pupil Communication established.')
 
-
     return context_master, req_master, pub_master, sub_master, context_slave, req_slave, pub_slave, sub_slave
 
 def setup_main_stimuli(win, photo_pos=(1, 0)):
     # Stim init
     print('Initializing stimuli...')
-    movie_1 = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//Video1.mp4', size=(2560, 1440))
+    movie_1 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video1.mp4', size=(2560, 1440))
     print('m1 initialized...')
-    movie_2 = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//Video2.mp4', size=(2560, 1440))
+    movie_2 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video2.mp4', size=(2560, 1440))
     print('m2 initialized...')
-    movie_3 = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//Video3.mp4', size=(2560, 1440))
+    movie_3 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video3.mp4', size=(2560, 1440))
     print('m3 initialized...')
     movies = {'m1': movie_1, 'm2': movie_2, 'm3': movie_3}
     rand_movies = list(np.random.permutation(list(movies.keys())))

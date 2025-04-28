@@ -33,7 +33,7 @@ The script function sequence is as follows:
 
 
 # Public Imports
-from psychopy import visual, core, logging
+from psychopy import sound, gui, visual, core, data, event, logging, clock, colors, layout, monitors
 import psychopy.iohub as io
 from psychopy.hardware import keyboard
 import ast
@@ -66,51 +66,62 @@ if 'session' in expInfo:
 
 # Setup Pupil/Psychopy comms using ZMQ library:
 # Creates ZMQ contexts and on this contexts REQ, SUB and PUB channels are established for both PCs. Also makes sure that both PCs have Pupil Capture instances.
-context_master, req_master, pub_master, sub_master, context_slave, req_slave, pub_slave, sub_slave = procedure_setup.setup_pupil_comms(wifi_source='wifi_nos')
+context_master, req_master, pub_master, sub_master, context_slave, req_slave, pub_slave, sub_slave = procedure_setup.setup_pupil_comms(wifi_source='hotspot_msi')
 
 # Setup timers
 globalClock = core.Clock()  # to track the time since experiment started
 routineTimer = core.Clock()  # to track time remaining of each (possibly non-slip) routine
 
 
-# INTERRUPT: PRESS X TO BEGIN CALIB INSTRUCTION
+### STAGE 2: CALIBRATION
+
+"""
+ 1. Initialize all calib_ani
+ 2. User input: start calib_ani_1
+ 3. Run calib_ani_1, clear window
+ 4. Change the HDMI input to caregiver -> slave
+ 5. User input: is HDMI on slave?
+ 6. Run calibration on caregiver(sl)
+ 7. Verify that calibration on caregiver is acceptable
+ 8. Change the HDMI input to child -> master
+ 9. User input: Is HDMI on master? Should calib_ani_2 start?
+ 10. Initialize a window
+ 11. Run calib_ani_2, clear window
+ 12. Run calibration on child(mast)
+ 13. Verify that calibration on child is acceptable
+ 14. User input: Was calibration successful? If yes, run calib_ani_3
+ 15. Initialize a window
+ 16. Run calib_ani_3, clear window
+"""
+
+# 1. VERBATIM: Initialize calibration animations
+calib_anim_1 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_1_1440.mp4',
+                             size=(2560, 1440))
+print('calib_anim_1 initialized...')
+
+# 2. INTERRUPT: PRESS X TO BEGIN CALIB INSTRUCTION
 routines.interrupt('Press \'x\' to begin calibration instruction...', win_master)  # This will be seen on the User's screen (win_master)
 
-# ROUTINE: CALIB ANIMATION
-calib_ani = visual.MovieStim3(win, 'C://Users//Badania//OneDrive//Pulpit//Syncc-In//calib_intro_20.wmv',
-                             size=(2560, 1440))  # Initializing calibration instruction movie for the Subjects
-ani_components = [calib_ani]
-
+# 3. ROUTINE: Calibration animation 1
+ani_components = [calib_anim_1]
 routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
-comms.send_annotation(pub_master, pub_slave, "start_calib_animation", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
-routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib animation...', duration=calib_ani.duration)  # Present the instruction
-comms.send_annotation(pub_master, pub_slave, "stop_calib_animation", req_master)  # Annotate that animation has stopped
+comms.send_annotation(pub_master, pub_slave, "start_calib_anim_1", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
+routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_1...', duration=calib_anim_1.duration)  # Present the instruction
+comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_1", req_master)  # Annotate that animation has stopped
 win.close()  # Clean-up the Subject's window
 del win
 
-# INTERRUPT : Calibration
-# Master calibration
-routines.interrupt('Press \'x\' to begin master calibration...', win_master)  # Wait for the User's intervention
-master_ang, master_prec = routines.run_calibration(req_master, sub_master)  # Run calibration for Master Subject
+# 4/5. INTERRUPT: HDMI to caregiver(sl)
+routines.interrupt('Press \'x\' when caregiver (sl) monitor input is set...', win_master)
 
-# TODO: Interrupt, for changing HDMI input to Subject monitor
-
-# Slave calibration
-routines.interrupt('Press \'x\' to begin slave calibration...', win_master)
+# 6/7. ROUTINE: Caregiver(sl) calibration
+routines.interrupt('Press \'x\' to begin caregiver (sl) calibration...', win_master)
 slave_ang, slave_prec = routines.run_calibration(req_slave, sub_slave)  # Run calibration for Slave Subject
 
-# INTERRUPT: Set master monitor as main
-routines.interrupt('Press \'x\' when master monitor input is set...', win_master)
+# 8/9. INTERRUPT: HDMI to child
+routines.interrupt('Press \'x\' when child (mast) monitor input is set. This will run second part of calibration instruction', win_master)
 
-# VERBATIM: Start recording
-rec_trigger = {'subject': 'recording.should_start', "remote_notify": "all"}  # Prepare recording trigger
-comms.notify(req_master, rec_trigger)
-comms.notify(req_slave, rec_trigger)  # Send it to both Pupil Capture Instances
-print("Recording has started")
-
-# TODO: Communicate to fNIRS, that recording started
-
-# VERBATIM: Opening new window on main monitor and initializing stimuli
+# 10. VERBATIM: Creating a new window on child (master) pc
 win = visual.Window(
     size=[2560, 1440], fullscr=True, screen=1,
     winType='pyglet', allowStencil=False,
@@ -119,6 +130,68 @@ win = visual.Window(
     units='height')
 win.flip()
 print('New window created...')
+
+# 11. ROUTINE: Calibration animation 2
+calib_anim_2 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_2.mp4',
+                             size=(2560, 1440))
+print('calib_anim_2 initialized...')
+
+ani_components = [calib_anim_2]
+routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
+comms.send_annotation(pub_master, pub_slave, "start_calib_anim_2", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
+routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_2...', duration=calib_anim_2.duration)  # Present the instruction
+comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_2", req_master)  # Annotate that animation has stopped
+win.close()  # Clean-up the Subject's window
+del win
+
+# 12/13. ROUTINE: Child (master) calibration
+routines.interrupt('Press \'x\' to begin master calibration...', win_master)  # Wait for the User's intervention
+master_ang, master_prec = routines.run_calibration(req_master, sub_master)  # Run calibration for Master Subject
+
+# 14. INTERRUPT: Final verification, waiting for calib_ani_3
+routines.interrupt('Press \'x\' if the calibration was successful. This will run the third part of the calibration', win_master)
+
+# 15. VERBATIM: Creating a new window on child (master) pc
+win = visual.Window(
+    size=[2560, 1440], fullscr=True, screen=1,
+    winType='pyglet', allowStencil=False,
+    monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
+    blendMode='avg', useFBO=True,
+    units='height')
+win.flip()
+print('New window created...')
+
+# 16. ROUTINE: Calibration animation 3
+calib_anim_3 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_3.mp4',
+                             size=(2560, 1440))
+print('calib_anim_3 initialized...')
+
+ani_components = [calib_anim_3]
+routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
+comms.send_annotation(pub_master, pub_slave, "start_calib_anim_3", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
+routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_3...', duration=calib_anim_3.duration)  # Present the instruction
+comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_3", req_master)  # Annotate that animation has stopped
+win.close()  # Clean-up the Subject's window
+del win
+
+### STAGE 2: END
+
+win = visual.Window(
+    size=[2560, 1440], fullscr=True, screen=1,
+    winType='pyglet', allowStencil=False,
+    monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
+    blendMode='avg', useFBO=True,
+    units='height')
+win.flip()
+print('New window created...')
+
+# VERBATIM: Start recording
+rec_trigger = {'subject': 'recording.should_start', "remote_notify": "all"}  # Prepare recording trigger
+comms.notify(req_master, rec_trigger)
+comms.notify(req_slave, rec_trigger)  # Send it to both Pupil Capture Instances
+print("Recording has started")
+
+# TODO: Communicate to fNIRS, that recording started
 
 # Initializing stimuli
 photo_pos = (1, 0)  # Normalized position of photodiode on the screen
