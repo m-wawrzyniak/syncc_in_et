@@ -43,12 +43,26 @@ import comms
 import procedure_setup
 import routines
 
-# SETUP:
+# GLOBAL PARAMETERS:
+CALIB_ANI_1_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_1_1440.mp4'
+CALIB_ANI_2_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_2.mp4'
+CALIB_ANI_3_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_3.mp4'
+
+MOVIE_1_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video10.mp4'
+MOVIE_2_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video2.mp4'
+MOVIE_3_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video3.mp4'
+
+### STAGE 1: SETUP
 
 # Specify path for log and data saving
-expInfo, thisExp, logFile, filename = procedure_setup.setup_path_and_log()  # creating log files and saving paths
+expInfo, thisExp, logFile, filename = procedure_setup.setup_path_log_psychopy()  # creating log files and saving paths
 endExpNow = False  # flag for 'escape' or other condition => quit the exp
 frameTolerance = 0.005  # how close to onset before 'same' frame
+
+ses_date, ses_time = expInfo['date'][:-7].split('_')
+ses_date = ses_date.replace('-', '_')
+ses_time = ses_time.replace('h', '')
+ses_pupil_file = f"{ses_date}_et_{ses_time}_{expInfo['participant']}"
 
 # Setup windows for procedure
 bckgnd_clr_str = expInfo['window background color']  # Get bckgnd color from UI
@@ -72,6 +86,12 @@ context_master, req_master, pub_master, sub_master, context_slave, req_slave, pu
 globalClock = core.Clock()  # to track the time since experiment started
 routineTimer = core.Clock()  # to track time remaining of each (possibly non-slip) routine
 
+# GUI debugging
+if expInfo['debug mode'] == 'True':
+    debug_mode = True
+else:
+    debug_mode = False
+start_stage = int(expInfo['start at stage'][0])
 
 ### STAGE 2: CALIBRATION
 
@@ -93,148 +113,180 @@ routineTimer = core.Clock()  # to track time remaining of each (possibly non-sli
  15. Initialize a window
  16. Run calib_ani_3, clear window
 """
+# 0. Shortcut:
+if start_stage <= 2:
 
-# 1. VERBATIM: Initialize calibration animations
-calib_anim_1 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_1_1440.mp4',
-                             size=(2560, 1440))
-print('calib_anim_1 initialized...')
+    # 1. VERBATIM: Initialize calibration animations
+    calib_anim_1 = visual.MovieStim3(win, CALIB_ANI_1_PATH, size=(2560, 1440))
+    print('calib_anim_1 initialized...')
 
-# 2. INTERRUPT: PRESS X TO BEGIN CALIB INSTRUCTION
-routines.interrupt('Press \'x\' to begin calibration instruction...', win_master)  # This will be seen on the User's screen (win_master)
+    # 2. INTERRUPT: PRESS X TO BEGIN CALIB INSTRUCTION
+    routines.interrupt('Press \'x\' to begin calibration instruction...', win_master)  # This will be seen on the User's screen (win_master)
 
-# 3. ROUTINE: Calibration animation 1
-ani_components = [calib_anim_1]
-routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
-comms.send_annotation(pub_master, pub_slave, "start_calib_anim_1", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
-routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_1...', duration=calib_anim_1.duration)  # Present the instruction
-comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_1", req_master)  # Annotate that animation has stopped
-win.close()  # Clean-up the Subject's window
-del win
+    # 3. ROUTINE: Calibration animation 1
+    ani_components = [calib_anim_1]
+    routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
+    comms.send_annotation(pub_master, pub_slave, "start_calib_anim_1", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
+    routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_1...', duration=calib_anim_1.duration if not debug_mode else 5)  # Present the instruction
+    comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_1", req_master)  # Annotate that animation has stopped
+    win.close()  # Clean-up the Subject's window
+    del win
 
-# 4/5. INTERRUPT: HDMI to caregiver(sl)
-routines.interrupt('Press \'x\' when caregiver (sl) monitor input is set...', win_master)
+    # 4/5. INTERRUPT: HDMI to caregiver(sl)
+    routines.interrupt('Press \'x\' when caregiver (sl) monitor input is set...', win_master)
 
-# 6/7. ROUTINE: Caregiver(sl) calibration
-routines.interrupt('Press \'x\' to begin caregiver (sl) calibration...', win_master)
-slave_ang, slave_prec = routines.run_calibration(req_slave, sub_slave)  # Run calibration for Slave Subject
+    # 6/7. ROUTINE: Caregiver(sl) calibration
+    routines.interrupt('Press \'x\' to begin caregiver (sl) calibration...', win_master)
+    if not debug_mode:
+        slave_ang, slave_prec = routines.run_calibration(req_slave, sub_slave)  # Run calibration for Slave Subject
 
-# 8/9. INTERRUPT: HDMI to child
-routines.interrupt('Press \'x\' when child (mast) monitor input is set. This will run second part of calibration instruction', win_master)
+    # 8/9. INTERRUPT: HDMI to child
+    routines.interrupt('Press \'x\' when child (mast) monitor input is set. This will run second part of calibration instruction', win_master)
 
-# 10. VERBATIM: Creating a new window on child (master) pc
-win = visual.Window(
-    size=[2560, 1440], fullscr=True, screen=1,
-    winType='pyglet', allowStencil=False,
-    monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
-    blendMode='avg', useFBO=True,
-    units='height')
-win.flip()
-print('New window created...')
+    # 10. VERBATIM: Creating a new window on child (master) pc
+    win = visual.Window(
+        size=[2560, 1440], fullscr=True, screen=1,
+        winType='pyglet', allowStencil=False,
+        monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
+        blendMode='avg', useFBO=True,
+        units='height')
+    win.flip()
+    print('New window created...')
 
-# 11. ROUTINE: Calibration animation 2
-calib_anim_2 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_2.mp4',
-                             size=(2560, 1440))
-print('calib_anim_2 initialized...')
+    # 11. ROUTINE: Calibration animation 2
+    calib_anim_2 = visual.MovieStim3(win, CALIB_ANI_2_PATH, size=(2560, 1440))
+    print('calib_anim_2 initialized...')
 
-ani_components = [calib_anim_2]
-routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
-comms.send_annotation(pub_master, pub_slave, "start_calib_anim_2", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
-routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_2...', duration=calib_anim_2.duration)  # Present the instruction
-comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_2", req_master)  # Annotate that animation has stopped
-win.close()  # Clean-up the Subject's window
-del win
+    ani_components = [calib_anim_2]
+    routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
+    comms.send_annotation(pub_master, pub_slave, "start_calib_anim_2", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
+    routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_2...', duration=calib_anim_2.duration if not debug_mode else 5)  # Present the instruction
+    comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_2", req_master)  # Annotate that animation has stopped
+    win.close()  # Clean-up the Subject's window
+    del win
 
-# 12/13. ROUTINE: Child (master) calibration
-routines.interrupt('Press \'x\' to begin master calibration...', win_master)  # Wait for the User's intervention
-master_ang, master_prec = routines.run_calibration(req_master, sub_master)  # Run calibration for Master Subject
+    # 12/13. ROUTINE: Child (master) calibration
+    routines.interrupt('Press \'x\' to begin master calibration...', win_master)  # Wait for the User's intervention
+    if not debug_mode:
+        master_ang, master_prec = routines.run_calibration(req_master, sub_master)  # Run calibration for Master Subject
 
-# 14. INTERRUPT: Final verification, waiting for calib_ani_3
-routines.interrupt('Press \'x\' if the calibration was successful. This will run the third part of the calibration', win_master)
+    # 14. INTERRUPT: Final verification, waiting for calib_ani_3
+    routines.interrupt('Press \'x\' if the calibration was successful. This will run the third part of the calibration', win_master)
 
-# 15. VERBATIM: Creating a new window on child (master) pc
-win = visual.Window(
-    size=[2560, 1440], fullscr=True, screen=1,
-    winType='pyglet', allowStencil=False,
-    monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
-    blendMode='avg', useFBO=True,
-    units='height')
-win.flip()
-print('New window created...')
+    # 15. VERBATIM: Creating a new window on child (master) pc
+    win = visual.Window(
+        size=[2560, 1440], fullscr=True, screen=1,
+        winType='pyglet', allowStencil=False,
+        monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
+        blendMode='avg', useFBO=True,
+        units='height')
+    win.flip()
+    print('New window created...')
 
-# 16. ROUTINE: Calibration animation 3
-calib_anim_3 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_3.mp4',
-                             size=(2560, 1440))
-print('calib_anim_3 initialized...')
+    # 16. ROUTINE: Calibration animation 3
+    calib_anim_3 = visual.MovieStim3(win, CALIB_ANI_3_PATH, size=(2560, 1440))
+    print('calib_anim_3 initialized...')
 
-ani_components = [calib_anim_3]
-routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
-comms.send_annotation(pub_master, pub_slave, "start_calib_anim_3", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
-routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_3...', duration=calib_anim_3.duration)  # Present the instruction
-comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_3", req_master)  # Annotate that animation has stopped
-win.close()  # Clean-up the Subject's window
-del win
+    ani_components = [calib_anim_3]
+    routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
+    comms.send_annotation(pub_master, pub_slave, "start_calib_anim_3", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
+    routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_3...', duration=calib_anim_3.duration if not debug_mode else 5)  # Present the instruction
+    comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_3", req_master)  # Annotate that animation has stopped
+    win.close()  # Clean-up the Subject's window
+    del win
 
-### STAGE 2: END
+### STAGE 3: MOVIES
 
-win = visual.Window(
-    size=[2560, 1440], fullscr=True, screen=1,
-    winType='pyglet', allowStencil=False,
-    monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
-    blendMode='avg', useFBO=True,
-    units='height')
-win.flip()
-print('New window created...')
+# 0. Shortcut:
+movies = None
+if start_stage <= 3:
 
-# VERBATIM: Start recording
-rec_trigger = {'subject': 'recording.should_start', "remote_notify": "all"}  # Prepare recording trigger
-comms.notify(req_master, rec_trigger)
-comms.notify(req_slave, rec_trigger)  # Send it to both Pupil Capture Instances
-print("Recording has started")
+    win = visual.Window(
+        size=[2560, 1440], fullscr=True, screen=1,
+        winType='pyglet', allowStencil=False,
+        monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
+        blendMode='avg', useFBO=True,
+        units='height')
+    win.flip()
+    print('New window created...')
 
-# TODO: Communicate to fNIRS, that recording started
+    # VERBATIM: Start recording
+    rec_trigger = {'subject': 'recording.should_start', "session_name": ses_pupil_file, "remote_notify": "all"}  # Prepare recording trigger
+    comms.notify(req_master, rec_trigger)
+    comms.notify(req_slave, rec_trigger)  # Send it to both Pupil Capture Instances
+    print("Recording has started")
 
-# Initializing stimuli
-photo_pos = (1, 0)  # Normalized position of photodiode on the screen
-movies, rand_movies, photo_rect_on, photo_rect_off, cross = procedure_setup.setup_main_stimuli(win, photo_pos=photo_pos)  # Setting up presented movies, photodiode marker and fixation cross
-expInfo['mov_order'] = rand_movies  # Save the order of the movies
-cross.draw()  # Draw focus cross before the first movie
-# TODO: Pytanie, czy informowac fNIRS o kazdej zmianie w procedurze ktora wplywa na to co widzi badany.
-win.flip()  # Refresh window
+    # TODO: Communicate to fNIRS, that recording started
 
-# INTERRUPT: Start main procedure
-routines.interrupt('Press \'x\' to begin stimulus procedure...', win_master)
-win_master.flip() # Refresh window
+    # Initializing stimuli
+    photo_pos = (1, 0)  # Normalized position of photodiode on the screen
+    movies, rand_movies, photo_rect_on, photo_rect_off, cross = procedure_setup.setup_main_stimuli(win, MOVIE_1_PATH, MOVIE_2_PATH, MOVIE_3_PATH, photo_pos=photo_pos)  # Setting up presented movies, photodiode marker and fixation cross
+    expInfo['mov_order'] = rand_movies  # Save the order of the movies
+    cross.draw()  # Draw focus cross before the first movie
+    # TODO: Pytanie, czy informowac fNIRS o kazdej zmianie w procedurze ktora wplywa na to co widzi badany.
+    win.flip()  # Refresh window
 
-# ROUTINE: Movies presentation:
-for i in range(len(rand_movies)):
-    # Movie setup
-    mov_name = rand_movies[i] # Pick movie
-    movie = movies[mov_name] # Pack it into components list
-    routines.setup_routine_components([movie]) # Set it up for routine
-    movie.reset()  # Synchronize audio with video.
+    # INTERRUPT: Start main procedure
+    routines.interrupt('Press \'x\' to begin stimulus procedure...', win_master)
+    win_master.flip() # Refresh window
 
-    # Sending start movie annotation
-    comms.send_annotation(pub_master, pub_slave, label=f'start_{str(mov_name)}', req_master=req_master)
+    # ROUTINE: Movies presentation:
+    for i in range(len(rand_movies)):
+        # Movie setup
+        mov_name = rand_movies[i] # Pick movie
+        movie = movies[mov_name] # Pack it into components list
+        routines.setup_routine_components([movie]) # Set it up for routine
+        movie.reset()  # Synchronize audio with video.
 
+        # Sending start movie annotation
+        comms.send_annotation(pub_master, pub_slave, label=f'start_{str(mov_name)}', req_master=req_master)
+
+        # TODO: Comms with fNIRS
+
+        # Running routine
+        routines.run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, routineTimer,
+                                      thisExp, defaultKeyboard, movie_duration=movie.duration if not debug_mode else 10)
+
+        # Sending stop movie annotation
+        comms.send_annotation(pub_master, pub_slave, label=f'stop_{str(mov_name)}', req_master=req_master)
+
+        # Setup and present fixation cross between the movies and at the end of movie sequence presentation
+        routines.setup_routine_components([cross])
+        routines.run_routine(win, [cross], routineTimer, defaultKeyboard, duration=10)
+
+    # VERBATIM: Ending record
+    req_master.send_string("r")
+    print('Ending recording for master: ' + req_master.recv_string())
+    req_slave.send_string("r")
+    print('Ending recording for slave: ' + req_slave.recv_string())
     # TODO: Comms with fNIRS
 
-    # Running routine
-    routines.run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, routineTimer,
-                                  thisExp, defaultKeyboard, movie_duration=movie.duration)
 
-    # Sending stop movie annotation
-    comms.send_annotation(pub_master, pub_slave, label=f'stop_{str(mov_name)}', req_master=req_master)
+### STAGE 4: FREE CONVO
+if start_stage <= 4:
+    if movies is None:
+        photo_rect_on, photo_rect_off = procedure_setup.setup_free_convo_stimuli(win)
 
-    # Setup and present fixation cross between the movies and at the end of movie sequence presentation
-    routines.setup_routine_components([cross])
-    routines.run_routine(win, [cross], routineTimer, defaultKeyboard, duration=10)
+    free_convos = ['first', 'second']
+    convo_countdown = int(expInfo['free conversation countdown'])
+    convo_len = int(expInfo['free conversation length'])
+    for i in free_convos:
+        routines.interrupt(f'Press \'x\' to begin {i} free conversation...', win_master)
 
-# VERBATIM: Ending record
-req_master.send_string("r")
-print('Ending recording for master: ' + req_master.recv_string())
-req_slave.send_string("r")
-print('Ending recording for slave: ' + req_slave.recv_string())
-# TODO: Comms with fNIRS
+        # VERBATIM: Start recording
+        rec_trigger = {'subject': 'recording.should_start', "session_name": ses_pupil_file, "remote_notify": "all"}
+        comms.notify(req_master, rec_trigger)
+        comms.notify(req_slave, rec_trigger)
+        print("Recording has started")
+
+        routines.run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
+                                        req_master, pub_master, pub_slave,
+                                        convo_countdown, convo_len, routineTimer, thisExp, defaultKeyboard)
+
+        req_master.send_string("r")
+        print('Ending recording for master: ' + req_master.recv_string())
+        req_slave.send_string("r")
+        print('Ending recording for slave: ' + req_slave.recv_string())
 
 # VERBATIM: Closing ports
 req_master.close()

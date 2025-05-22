@@ -12,7 +12,7 @@ from psychopy.hardware import keyboard
 
 # TODO: Proper argument and return types docstring
 
-def setup_path_and_log():
+def setup_path_log_psychopy():
     """
     Setup paths and logs for ET procedure.
 
@@ -33,7 +33,11 @@ def setup_path_and_log():
     expInfo = {
         'participant': f"{randint(0, 999999):06.0f}",
         'session': '001',
-        'window background color': '[0.0, 0.0, 0.0]'
+        'window background color': '[0.0, 0.0, 0.0]',
+        'free conversation countdown': '30',
+        'free conversation length': '180',
+        'debug mode': ['False', 'True'],
+        'start at stage': ['2. Calibration', '3. Movies', '4. Free convo']
     }
     print(f"Syncc-In ET procedure, participant: {expInfo['participant']}")
 
@@ -103,15 +107,11 @@ def setup_windows(background_clr = None):
 
     return win_main, win_master, gigabyte_monitor, test_monitor
 
-def setup_pupil_comms(wifi_source='wifi_nos'):
+def setup_pupil_comms(wifi_source='hotspot_msi'):
 
     # Dictionary format: key(wifi name) : tuple(addr_master, addr_slave)
     addr_dict = {
-        #'wifi_asia':("172.20.10.2", "172.20.10.3"),
-        #'wifi_mati':("192.168.48.227", "192.168.48.85"),
-        #'wifi_maciek':("192.168.224.227", "192.168.224.85"),
-        'wifi_nos':("192.168.1.153", "192.168.1.167"),
-        'hotspot_msi':("172.16.3.185", "192.168.137.128")
+        'hotspot_msi':("127.0.0.1", "192.168.137.100")
     }
 
     addr_master, addr_slave = addr_dict[wifi_source]
@@ -206,14 +206,14 @@ def setup_pupil_comms(wifi_source='wifi_nos'):
 
     return context_master, req_master, pub_master, sub_master, context_slave, req_slave, pub_slave, sub_slave
 
-def setup_main_stimuli(win, photo_pos=(1, 0)):
+def setup_main_stimuli(win, vid1_path, vid2_path, vid3_path, photo_pos=(1, 0)):
     # Stim init
     print('Initializing stimuli...')
-    movie_1 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video1.mp4', size=(2560, 1440))
+    movie_1 = visual.MovieStim3(win, vid1_path, size=(2560, 1440))
     print('m1 initialized...')
-    movie_2 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video2.mp4', size=(2560, 1440))
+    movie_2 = visual.MovieStim3(win, vid2_path, size=(2560, 1440))
     print('m2 initialized...')
-    movie_3 = visual.MovieStim3(win, 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video3.mp4', size=(2560, 1440))
+    movie_3 = visual.MovieStim3(win, vid3_path, size=(2560, 1440))
     print('m3 initialized...')
     movies = {'m1': movie_1, 'm2': movie_2, 'm3': movie_3}
     rand_movies = list(np.random.permutation(list(movies.keys())))
@@ -236,7 +236,7 @@ def setup_main_stimuli(win, photo_pos=(1, 0)):
         opacity=None, depth=0.0, interpolate=True)
 
     # Cross stimuli init
-    cross = cross = visual.ShapeStim(
+    cross = visual.ShapeStim(
         win=win,
         vertices='cross',  # Define shape as a cross
         size=(2,2),  # Size of the cross (width and height)
@@ -249,3 +249,27 @@ def setup_main_stimuli(win, photo_pos=(1, 0)):
     photo_rect_off.draw()
     win.flip()
     return movies, rand_movies, photo_rect_on, photo_rect_off, cross
+
+def setup_free_convo_stimuli(win, photo_pos=(1, 0)):
+
+    # Photodiode rectangle init
+    size = 0.1
+    photo_rect_on = visual.Rect(
+        win=win, name='photo_rect_on',
+        width=size * (9 / 16), height=size, units='norm',
+        ori=0.0, pos=photo_pos, anchor='bottom-right',
+        lineWidth=1.0, colorSpace='rgb', lineColor='white', fillColor='white',
+        opacity=None, depth=0.0, interpolate=True)
+
+    size = 0.1
+    photo_rect_off = visual.Rect(
+        win=win, name='photo_rect_off',
+        width=size * (9 / 16), height=size, units='norm',
+        ori=0.0, pos=photo_pos, anchor='bottom-right',
+        lineWidth=1.0, colorSpace='rgb', lineColor='black', fillColor='black',
+        opacity=None, depth=0.0, interpolate=True)
+
+
+    photo_rect_off.draw()
+    win.flip()
+    return photo_rect_on, photo_rect_off

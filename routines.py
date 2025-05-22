@@ -1,7 +1,8 @@
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
                                 STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
-from psychopy import visual, core, event
+from psychopy import visual, core, event, sound
 import msgpack as serializer
+import comms
 
 """
 These functions are mostly based on common code segments used in PsychoPy
@@ -234,3 +235,114 @@ def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, ro
     routineTimer.reset()
     photo_rect_on.setAutoDraw(False)
     photo_rect_off.setAutoDraw(True)
+
+
+def run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
+                           req_master, pub_master, pub_slave,
+                           convo_countdown, convo_len, routineTimer, thisExp, defaultKeyboard):
+
+    comms.send_annotation(pub_master, pub_slave, f"start_countdown_free", req_master)
+    routineTimer.reset()
+    frameN = -1
+    _timeToFirstFrame = win.getFutureFlipTime(clock="now")
+
+    # Tekst countdownu na win_master
+    countdown_text = visual.TextStim(win_master, text="", height=0.1, color='white', pos=(0, 0))
+
+    # --- FAZA 0: Odczekanie 30 sekund z countdownem ---
+    wait_timer = core.Clock()
+    response = show_countdown(convo_countdown, win_master, wait_timer, countdown_text)
+    if response == "x":
+        return
+
+    # --- FAZA 1: Miganie fotodiody + dźwięk ---
+    photo_toggle_time = 2  # sekundy
+    toggle_cnt = 0
+    max_toggles = 4  # 2 pelne migniecia (on/off)
+    photo_is_on = False
+    last_toggle_time = 0
+
+    routineTimer.reset()
+    continueRoutine = True
+    while continueRoutine:
+        t = routineTimer.getTime()
+        tThisFlip = win.getFutureFlipTime(clock=routineTimer)
+        frameN += 1
+
+        if toggle_cnt < max_toggles and t >= last_toggle_time + photo_toggle_time:
+            last_toggle_time = t
+            if not photo_is_on:
+                photo_rect_on.setAutoDraw(True)
+                photo_rect_off.setAutoDraw(False)
+            else:
+                photo_rect_on.setAutoDraw(False)
+                photo_rect_off.setAutoDraw(True)
+            photo_is_on = not photo_is_on
+            toggle_cnt += 1
+
+        if toggle_cnt >= max_toggles:
+            continueRoutine = False
+
+        win.flip()
+
+    photo_rect_on.setAutoDraw(False)
+    photo_rect_off.setAutoDraw(True)
+
+    comms.send_annotation(pub_master, pub_slave, "start_free_convo", req_master)
+    beep = sound.Sound("C", secs=1.0, stereo=True)
+    beep.play()
+
+    # --- FAZA 2: 3 minuty swobodnej rozmowy ---
+    wait_timer = core.Clock()
+    response = show_countdown(convo_len, win_master, wait_timer, countdown_text)
+    if response == "x":
+        pass  # Przerywa 3 minuty wcześniej
+
+    # --- FAZA 3: Miganie fotodiody + dźwięk ---
+    beep = sound.Sound("C", secs=1.0, stereo=True)
+    beep.play()
+    comms.send_annotation(pub_master, pub_slave, "stop_free_convo", req_master)
+
+    routineTimer.reset()
+    toggle_cnt = 0
+    last_toggle_time = 0
+    photo_is_on = False
+    continueRoutine = True
+    while continueRoutine:
+        t = routineTimer.getTime()
+        frameN += 1
+
+        if toggle_cnt < max_toggles and t >= last_toggle_time + photo_toggle_time:
+            last_toggle_time = t
+            if not photo_is_on:
+                photo_rect_on.setAutoDraw(True)
+                photo_rect_off.setAutoDraw(False)
+            else:
+                photo_rect_on.setAutoDraw(False)
+                photo_rect_off.setAutoDraw(True)
+            photo_is_on = not photo_is_on
+            toggle_cnt += 1
+
+        if toggle_cnt >= max_toggles:
+            continueRoutine = False
+
+        win.flip()
+
+    photo_rect_on.setAutoDraw(False)
+    photo_rect_off.setAutoDraw(True)
+    routineTimer.reset()
+
+def show_countdown(duration, win, timer, text_stim, key_list=["escape"]):
+    timer.reset()
+    while timer.getTime() < duration:
+        remaining = int(duration - timer.getTime())
+        text_stim.text = f"Pozostało: {remaining} s"
+        text_stim.draw()
+        win.flip()
+
+        keys = event.getKeys(keyList=key_list)
+        if "escape" in keys:
+            core.quit()
+        elif "x" in keys:
+            return "x"
+    return None
