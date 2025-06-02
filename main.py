@@ -44,13 +44,13 @@ import procedure_setup
 import routines
 
 # GLOBAL PARAMETERS:
-CALIB_ANI_1_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_1_1440.mp4'
-CALIB_ANI_2_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_2.mp4'
-CALIB_ANI_3_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//calib_3.mp4'
+CALIB_ANI_1_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies - kopia//normalized_calib_1_1440.mp4'
+CALIB_ANI_2_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies - kopia//normalized_calib_2.mp4'
+CALIB_ANI_3_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies - kopia//normalized_calib_3.mp4'
 
-MOVIE_1_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video10.mp4'
-MOVIE_2_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video2.mp4'
-MOVIE_3_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies//Video3.mp4'
+MOVIE_1_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies - kopia//normalized_Video10.mp4'
+MOVIE_2_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies - kopia//normalized_Video2.mp4'
+MOVIE_3_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//movies - kopia//normalized_Video3.mp4'
 
 ### STAGE 1: SETUP
 

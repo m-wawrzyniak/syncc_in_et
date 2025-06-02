@@ -251,12 +251,12 @@ def run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
 
     # --- FAZA 0: Odczekanie 30 sekund z countdownem ---
     wait_timer = core.Clock()
-    response = show_countdown(convo_countdown, win_master, wait_timer, countdown_text)
+    response = show_countdown(convo_countdown, win_master, wait_timer, countdown_text, "Rozbieg. Pozostało:")
     if response == "x":
         return
 
     # --- FAZA 1: Miganie fotodiody + dźwięk ---
-    photo_toggle_time = 2  # sekundy
+    photo_toggle_time = 1  # sekundy
     toggle_cnt = 0
     max_toggles = 4  # 2 pelne migniecia (on/off)
     photo_is_on = False
@@ -294,7 +294,7 @@ def run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
 
     # --- FAZA 2: 3 minuty swobodnej rozmowy ---
     wait_timer = core.Clock()
-    response = show_countdown(convo_len, win_master, wait_timer, countdown_text)
+    response = show_countdown(convo_len, win_master, wait_timer, countdown_text, 'Swobodna rozmowa. Pozostało:')
     if response == "x":
         pass  # Przerywa 3 minuty wcześniej
 
@@ -332,11 +332,11 @@ def run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
     photo_rect_off.setAutoDraw(True)
     routineTimer.reset()
 
-def show_countdown(duration, win, timer, text_stim, key_list=["escape"]):
+def show_countdown(duration, win, timer, text_stim, text_content, key_list=["escape"]):
     timer.reset()
     while timer.getTime() < duration:
         remaining = int(duration - timer.getTime())
-        text_stim.text = f"Pozostało: {remaining} s"
+        text_stim.text = f"{text_content}: {remaining} s"
         text_stim.draw()
         win.flip()
 
