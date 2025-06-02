@@ -2,8 +2,8 @@ import subprocess
 import os
 
 # Ścieżka do folderu z wideo
-folder = "C:/Users/Badania/PycharmProjects/et_procedure/movies - kopia"  # Zmień na swój folder
-output_prefix = "normalized_"
+folder = "C:/Users/Badania/PycharmProjects/et_procedure/videos"  # Zmień na swój folder
+output_prefix = "norm_"
 
 for filename in os.listdir(folder):
     if filename.endswith(".mp4"):
