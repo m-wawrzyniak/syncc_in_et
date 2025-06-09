@@ -26,7 +26,7 @@ The script function sequence is as follows:
             - Show movie for 60s
             - Show fixation cross for 10s
             - Continue
-        - Stop recording 
+        - Stop recording
     - Saving logs
     - Cleaning up, closing communication ports etc.
 """
@@ -89,10 +89,6 @@ ioSession = '1'
 if 'session' in expInfo:
     ioSession = str(expInfo['session'])
 
-# Setup Pupil/Psychopy comms using ZMQ library:
-# Creates ZMQ contexts and on this contexts REQ, SUB and PUB channels are established for both PCs. Also makes sure that both PCs have Pupil Capture instances.
-context_master, req_master, pub_master, sub_master, context_slave, req_slave, pub_slave, sub_slave = procedure_setup.setup_pupil_comms(wifi_source='hotspot_msi')
-
 # Setup timers
 globalClock = core.Clock()  # to track the time since experiment started
 routineTimer = core.Clock()  # to track time remaining of each (possibly non-slip) routine
@@ -137,9 +133,7 @@ if start_stage <= 2:
     # 3. ROUTINE: Calibration animation 1
     ani_components = [calib_anim_1]
     routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
-    comms.send_annotation(pub_master, pub_slave, "start_calib_anim_1", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
     routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_1...', duration=calib_anim_1.duration if not debug_mode else 5)  # Present the instruction
-    comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_1", req_master)  # Annotate that animation has stopped
     win.close()  # Clean-up the Subject's window
     del win
 
@@ -148,8 +142,6 @@ if start_stage <= 2:
 
     # 6/7. ROUTINE: Caregiver(sl) calibration
     routines.interrupt('Press \'x\' to begin caregiver (sl) calibration...', win_master)
-    if not debug_mode:
-        slave_ang, slave_prec = routines.run_calibration(req_slave, sub_slave)  # Run calibration for Slave Subject
 
     # 8/9. INTERRUPT: HDMI to child
     routines.interrupt('Press \'x\' when child (mast) monitor input is set. This will run second part of calibration instruction', win_master)
@@ -170,16 +162,12 @@ if start_stage <= 2:
 
     ani_components = [calib_anim_2]
     routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
-    comms.send_annotation(pub_master, pub_slave, "start_calib_anim_2", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
     routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_2...', duration=calib_anim_2.duration if not debug_mode else 5)  # Present the instruction
-    comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_2", req_master)  # Annotate that animation has stopped
     win.close()  # Clean-up the Subject's window
     del win
 
     # 12/13. ROUTINE: Child (master) calibration
     routines.interrupt('Press \'x\' to begin master calibration...', win_master)  # Wait for the User's intervention
-    if not debug_mode:
-        master_ang, master_prec = routines.run_calibration(req_master, sub_master)  # Run calibration for Master Subject
 
     # 14. INTERRUPT: Final verification, waiting for calib_ani_3
     routines.interrupt('Press \'x\' if the calibration was successful. This will run the third part of the calibration', win_master)
@@ -200,9 +188,7 @@ if start_stage <= 2:
 
     ani_components = [calib_anim_3]
     routines.setup_routine_components(ani_components) # Setup psychopy routine for calibration instruction
-    comms.send_annotation(pub_master, pub_slave, "start_calib_anim_3", req_master) # ZMQ sends info to Pupil Captures to write to logs that the calibration instruction movie starts
     routines.run_routine(win, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_3...', duration=calib_anim_3.duration if not debug_mode else 5)  # Present the instruction
-    comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_3", req_master)  # Annotate that animation has stopped
     win.close()  # Clean-up the Subject's window
     del win
 
@@ -220,12 +206,6 @@ if start_stage <= 3:
         units='height')
     win.flip()
     print('New window created...')
-
-    # VERBATIM: Start recording
-    rec_trigger = {'subject': 'recording.should_start', "session_name": ses_pupil_file, "remote_notify": "all"}  # Prepare recording trigger
-    comms.notify(req_master, rec_trigger)
-    comms.notify(req_slave, rec_trigger)  # Send it to both Pupil Capture Instances
-    print("Recording has started")
 
     # TODO: Communicate to fNIRS, that recording started
 
@@ -248,8 +228,6 @@ if start_stage <= 3:
         movie = movies[mov_name] # Pack it into components list
         routines.setup_routine_components([movie]) # Set it up for routine
 
-        # Sending start movie annotation
-        comms.send_annotation(pub_master, pub_slave, label=f'start_{str(mov_name)}', req_master=req_master)
 
         # TODO: Comms with fNIRS
 
@@ -258,19 +236,11 @@ if start_stage <= 3:
         routines.run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, routineTimer,
                                       thisExp, defaultKeyboard, movie_duration=movie.duration-1 if not debug_mode else 10)
 
-        # Sending stop movie annotation
-        comms.send_annotation(pub_master, pub_slave, label=f'stop_{str(mov_name)}', req_master=req_master)
 
         # Setup and present fixation cross between the movies and at the end of movie sequence presentation
         routines.setup_routine_components([cross])
         routines.run_routine(win, [cross], routineTimer, defaultKeyboard, duration=10)
 
-    # VERBATIM: Ending record
-    req_master.send_string("r")
-    print('Ending recording for master: ' + req_master.recv_string())
-    req_slave.send_string("r")
-    print('Ending recording for slave: ' + req_slave.recv_string())
-    # TODO: Comms with fNIRS
 
 
 ### STAGE 4: FREE CONVO
@@ -284,30 +254,10 @@ if start_stage <= 4:
     for i in free_convos:
         routines.interrupt(f'Press \'x\' to begin {i} free conversation...', win_master)
 
-        # VERBATIM: Start recording
-        rec_trigger = {'subject': 'recording.should_start', "session_name": ses_pupil_file, "remote_notify": "all"}
-        comms.notify(req_master, rec_trigger)
-        comms.notify(req_slave, rec_trigger)
-        print("Recording has started")
-
         routines.run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
-                                        req_master, pub_master, pub_slave,
+                                        None, None, None,
                                         convo_countdown, convo_len, routineTimer, thisExp, defaultKeyboard)
 
-        req_master.send_string("r")
-        print('Ending recording for master: ' + req_master.recv_string())
-        req_slave.send_string("r")
-        print('Ending recording for slave: ' + req_slave.recv_string())
-
-# VERBATIM: Closing ports
-req_master.close()
-pub_master.close()
-sub_master.close()
-req_slave.close()
-pub_slave.close()
-sub_slave.close()
-context_master.destroy()
-context_slave.destroy()
 
 # VERBATIM: Saving logs and closing procedure
 # thisExp.saveAsWideText(filename + '.csv', delim='auto')  # CSV doesn't save ExpInfo as supposed

@@ -241,7 +241,13 @@ def run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
                            req_master, pub_master, pub_slave,
                            convo_countdown, convo_len, routineTimer, thisExp, defaultKeyboard):
 
-    comms.send_annotation(pub_master, pub_slave, f"start_countdown_free", req_master)
+    noet = False
+    if req_master is None or pub_master is None or pub_slave is None:
+        noet = True
+
+    if not noet:
+        comms.send_annotation(pub_master, pub_slave, f"start_countdown_free", req_master)
+
     routineTimer.reset()
     frameN = -1
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
@@ -288,7 +294,8 @@ def run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
     photo_rect_on.setAutoDraw(False)
     photo_rect_off.setAutoDraw(True)
 
-    comms.send_annotation(pub_master, pub_slave, "start_free_convo", req_master)
+    if not noet:
+        comms.send_annotation(pub_master, pub_slave, "start_free_convo", req_master)
     beep = sound.Sound("C", secs=1.0, stereo=True)
     beep.play()
 
@@ -301,7 +308,8 @@ def run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
     # --- FAZA 3: Miganie fotodiody + dźwięk ---
     beep = sound.Sound("C", secs=1.0, stereo=True)
     beep.play()
-    comms.send_annotation(pub_master, pub_slave, "stop_free_convo", req_master)
+    if not noet:
+        comms.send_annotation(pub_master, pub_slave, "stop_free_convo", req_master)
 
     routineTimer.reset()
     toggle_cnt = 0
