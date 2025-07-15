@@ -59,23 +59,13 @@ for i, screen in enumerate(screens):
     if screen.width != WIN_SIZES[i][0] or screen.height != WIN_SIZES[i][1]:
         raise TypeError('Screen IDs are wrong!')
 
-CALIB_ANI_1_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_kalib_1.mp4'
-CALIB_ANI_2_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_kalib_2.mp4'
-CALIB_ANI_3_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_kalib_3.mp4'
+CALIB_ANI_1_PATH = 'C://movies_et//norm_kalib_1.mp4'
+CALIB_ANI_2_PATH = 'C://movies_et//norm_kalib_2.mp4'
+CALIB_ANI_3_PATH = 'C://movies_et//norm_kalib_3.mp4'
 
-MOVIE_1_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_mov1.mp4'
-MOVIE_2_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_mov2.mp4'
-MOVIE_3_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_mov3.mp4'
-
-"""
-CALIB_ANI_1_PATH = 'C://videos//norm_kalib_1.mp4'
-CALIB_ANI_2_PATH = 'C://videos//norm_kalib_2.mp4'
-CALIB_ANI_3_PATH = 'C://videos//norm_kalib_3.mp4'
-
-MOVIE_1_PATH = 'C://videos//norm_mov1.mp4'
-MOVIE_2_PATH = 'C://videos//norm_mov2.mp4'
-MOVIE_3_PATH = 'C://videos//norm_mov3.mp4'
-"""
+MOVIE_1_PATH = 'C://movies_et//norm_mov1.mp4'
+MOVIE_2_PATH = 'C://movies_et//norm_mov2.mp4'
+MOVIE_3_PATH = 'C://movies_et//norm_mov3.mp4'
 
 ### STAGE 1: SETUP
 
