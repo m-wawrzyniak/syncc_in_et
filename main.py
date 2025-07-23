@@ -42,26 +42,30 @@ import ast
 import comms
 import procedure_setup
 import routines
+import pyglet
 
 # GLOBAL PARAMETERS:
 
-CALIB_ANI_1_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_kalib_1.mp4'
-CALIB_ANI_2_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_kalib_2.mp4'
-CALIB_ANI_3_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_kalib_3.mp4'
+WIN_ID_MASTER = 1
+WIN_ID_MAIN = 0
+WIN_SIZES = [None, None]
+WIN_SIZES[WIN_ID_MASTER] = (1920,1080)
+WIN_SIZES[WIN_ID_MAIN] = (2560, 1440)
 
-MOVIE_1_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_mov1.mp4'
-MOVIE_2_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_mov2.mp4'
-MOVIE_3_PATH = 'C://Users//Badania//PycharmProjects//et_procedure//videos//norm_mov3.mp4'
+screens = pyglet.canvas.get_display().get_screens()
 
-"""
-CALIB_ANI_1_PATH = 'C://videos//norm_kalib_1.mp4'
-CALIB_ANI_2_PATH = 'C://videos//norm_kalib_2.mp4'
-CALIB_ANI_3_PATH = 'C://videos//norm_kalib_3.mp4'
+for i, screen in enumerate(screens):
+    print(f"Screen {i}: {screen.width}x{screen.height}, x={screen.x}, y={screen.y}")
+    if screen.width != WIN_SIZES[i][0] or screen.height != WIN_SIZES[i][1]:
+        raise TypeError('Screen IDs are wrong!')
 
-MOVIE_1_PATH = 'C://videos//norm_mov1.mp4'
-MOVIE_2_PATH = 'C://videos//norm_mov2.mp4'
-MOVIE_3_PATH = 'C://videos//norm_mov3.mp4'
-"""
+CALIB_ANI_1_PATH = 'C://movies_et//norm_kalib_1.mp4'
+CALIB_ANI_2_PATH = 'C://movies_et//norm_kalib_2.mp4'
+CALIB_ANI_3_PATH = 'C://movies_et//norm_kalib_3.mp4'
+
+MOVIE_1_PATH = 'C://movies_et//norm_mov1.mp4'
+MOVIE_2_PATH = 'C://movies_et//norm_mov2.mp4'
+MOVIE_3_PATH = 'C://movies_et//norm_mov3.mp4'
 
 ### STAGE 1: SETUP
 
@@ -78,7 +82,7 @@ ses_pupil_file = f"{ses_date}_et_{ses_time}_{expInfo['participant']}"
 # Setup windows for procedure
 bckgnd_clr_str = expInfo['window background color']  # Get bckgnd color from UI
 bckgnd_clr = ast.literal_eval(bckgnd_clr_str)  # Convert it to a list of RGB
-win, win_master, gigabyte_mon, test_mon = procedure_setup.setup_windows(background_clr=bckgnd_clr)  # Setup the windows: win is seen on Subject monitor, win_master on Master monitor
+win, win_master, gigabyte_mon, test_mon = procedure_setup.setup_windows(win_id_master=WIN_ID_MASTER, win_id_main=WIN_ID_MAIN, background_clr=bckgnd_clr)  # Setup the windows: win is seen on Subject monitor, win_master on Master monitor
 
 # Setup input/output devices - standard PsychoPy segment
 ioConfig = {}
@@ -156,7 +160,7 @@ if start_stage <= 2:
 
     # 10. VERBATIM: Creating a new window on child (master) pc
     win = visual.Window(
-        size=[2560, 1440], fullscr=True, screen=1,
+        size=[2560, 1440], fullscr=True, screen=WIN_ID_MAIN,
         winType='pyglet', allowStencil=False,
         monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,
@@ -186,7 +190,7 @@ if start_stage <= 2:
 
     # 15. VERBATIM: Creating a new window on child (master) pc
     win = visual.Window(
-        size=[2560, 1440], fullscr=True, screen=1,
+        size=[2560, 1440], fullscr=True, screen=WIN_ID_MAIN,
         winType='pyglet', allowStencil=False,
         monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,
@@ -213,7 +217,7 @@ movies = None
 if start_stage <= 3:
 
     win = visual.Window(
-        size=[2560, 1440], fullscr=True, screen=1,
+        size=[2560, 1440], fullscr=True, screen=WIN_ID_MAIN,
         winType='pyglet', allowStencil=False,
         monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,

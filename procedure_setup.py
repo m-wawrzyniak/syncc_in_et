@@ -69,7 +69,7 @@ def setup_path_log_psychopy():
 
     return expInfo, thisExp, logFile, filename
 
-def setup_windows(background_clr = None):
+def setup_windows(win_id_master, win_id_main, background_clr = None):
     all_monitors = monitors.getAllMonitors()
     print(f"Available monitors: {all_monitors}")
 
@@ -90,7 +90,7 @@ def setup_windows(background_clr = None):
         background_clr = [-1.0, -1.0, -1.0]
 
     win_main = visual.Window(
-        size=[2560, 1440], fullscr=True, screen=1,
+        size=[2560, 1440], fullscr=True, screen=win_id_main,
         winType='pyglet', allowStencil=False,
         monitor=gigabyte_monitor, color=background_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,
@@ -98,7 +98,7 @@ def setup_windows(background_clr = None):
     win_main.mouseVisible = True
 
     win_master = visual.Window(
-        size=[640, 480], fullscr=False, screen=0,
+        size=[640, 480], fullscr=False, screen=win_id_master,
         winType='pyglet', allowStencil=False,
         monitor=test_monitor, color=background_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,

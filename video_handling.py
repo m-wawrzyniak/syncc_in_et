@@ -1,8 +1,7 @@
 import subprocess
 import os
 
-# Ścieżka do folderu z wideo
-folder = "C:/Users/Badania/PycharmProjects/et_procedure/videos"  # Zmień na swój folder
+folder = "C:/Users/Badania/PycharmProjects/et_procedure/videos"
 output_prefix = "norm_"
 
 for filename in os.listdir(folder):
