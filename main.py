@@ -49,16 +49,16 @@ import pyglet
 WIN_ID_MASTER = 1
 WIN_ID_MAIN = 0
 WIN_SIZES = [None, None]
-WIN_SIZES[WIN_ID_MASTER] = (1920,1080)
+WIN_SIZES[WIN_ID_MASTER] = (1920, 1080)
 WIN_SIZES[WIN_ID_MAIN] = (2560, 1440)
 
 screens = pyglet.canvas.get_display().get_screens()
-
+"""
 for i, screen in enumerate(screens):
     print(f"Screen {i}: {screen.width}x{screen.height}, x={screen.x}, y={screen.y}")
     if screen.width != WIN_SIZES[i][0] or screen.height != WIN_SIZES[i][1]:
         raise TypeError('Screen IDs are wrong!')
-
+"""
 CALIB_ANI_1_PATH = 'C://movies_et//norm_kalib_1.mp4'
 CALIB_ANI_2_PATH = 'C://movies_et//norm_kalib_2.mp4'
 CALIB_ANI_3_PATH = 'C://movies_et//norm_kalib_3.mp4'
@@ -87,7 +87,7 @@ win, win_master, gigabyte_mon, test_mon = procedure_setup.setup_windows(win_id_m
 # Setup input/output devices - standard PsychoPy segment
 ioConfig = {}
 ioConfig['Keyboard'] = dict(use_keymap='psychopy')
-ioServer = io.launchHubServer(window=win, **ioConfig)
+ioServer = io.launchHubServer(window=win_master, **ioConfig)
 defaultKeyboard = keyboard.Keyboard(backend='iohub')
 ioSession = '1'
 if 'session' in expInfo:
@@ -231,14 +231,11 @@ if start_stage <= 3:
     comms.notify(req_slave, rec_trigger)  # Send it to both Pupil Capture Instances
     print("Recording has started")
 
-    # TODO: Communicate to fNIRS, that recording started
-
     # Initializing stimuli
     photo_pos = (1, 0)  # Normalized position of photodiode on the screen
     movies, rand_movies, photo_rect_on, photo_rect_off, cross = procedure_setup.setup_main_stimuli(win, MOVIE_1_PATH, MOVIE_2_PATH, MOVIE_3_PATH, photo_pos=photo_pos)  # Setting up presented movies, photodiode marker and fixation cross
     expInfo['mov_order'] = rand_movies  # Save the order of the movies
     cross.draw()  # Draw focus cross before the first movie
-    # TODO: Pytanie, czy informowac fNIRS o kazdej zmianie w procedurze ktora wplywa na to co widzi badany.
     win.flip()  # Refresh window
 
     # INTERRUPT: Start main procedure
@@ -255,7 +252,6 @@ if start_stage <= 3:
         # Sending start movie annotation
         comms.send_annotation(pub_master, pub_slave, label=f'start_{str(mov_name)}', req_master=req_master)
 
-        # TODO: Comms with fNIRS
 
         # Running routine
         movie.reset()  # Synchronize audio with video.
@@ -274,7 +270,6 @@ if start_stage <= 3:
     print('Ending recording for master: ' + req_master.recv_string())
     req_slave.send_string("r")
     print('Ending recording for slave: ' + req_slave.recv_string())
-    # TODO: Comms with fNIRS
 
 
 ### STAGE 4: FREE CONVO
@@ -319,4 +314,5 @@ thisExp.saveAsPickle(filename)
 logging.flush()
 thisExp.abort()  # This will cancel ExperimentHandler save during core.quit()
 win.close()
+win_master.close()
 core.quit()
