@@ -1,14 +1,12 @@
 import os
 import zmq
 import time
-import numpy as np
+from numpy.random import randint
+from psychopy import  gui, visual, core, data, logging, monitors
 
-from numpy.random import random, randint, normal, shuffle, choice as randchoice
-from psychopy import sound, gui, visual, core, data, event, logging, clock, colors, layout, monitors
-import m03_pupilcapture_comms
-import msgpack
-import psychopy.iohub as io
-from psychopy.hardware import keyboard
+import m03_pupilcapture_comms as comms
+
+from config import WIFI_IP_DICT
 
 # TODO: Proper argument and return types docstring
 
@@ -109,12 +107,7 @@ def setup_windows(win_id_master, win_id_main, background_clr = None):
 
 def setup_pupil_comms(wifi_source='hotspot_msi'):
 
-    # Dictionary format: key(wifi name) : tuple(addr_master, addr_slave)
-    addr_dict = {
-        'hotspot_msi':("127.0.0.1", "192.168.137.100")
-    }
-
-    addr_master, addr_slave = addr_dict[wifi_source]
+    addr_master, addr_slave = WIFI_IP_DICT[wifi_source]
 
     # Master PC - ports and connections
     port_master = "50020"

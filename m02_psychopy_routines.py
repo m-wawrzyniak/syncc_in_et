@@ -2,7 +2,10 @@ from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
                                 STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
 from psychopy import visual, core, event, sound
 import msgpack as serializer
-import m03_pupilcapture_comms
+
+import m03_pupilcapture_comms as comms
+
+from config import FRAMETOLERANCE
 
 """
 These functions are mostly based on common code segments used in PsychoPy
@@ -35,7 +38,6 @@ def run_routine(win, routine_components, routine_timer, defaultKeyboard, msg='Ru
     """
     print(msg)
 
-    frameTolerance = 0.005
     continue_routine = True
     t = 0
     frameN = -1
@@ -51,14 +53,14 @@ def run_routine(win, routine_components, routine_timer, defaultKeyboard, msg='Ru
 
         # Update/draw components
         for comp in routine_components:
-            if comp.status == NOT_STARTED and tThisFlip >= 0.0 - frameTolerance:
+            if comp.status == NOT_STARTED and tThisFlip >= 0.0 - FRAMETOLERANCE:
                 comp.frameNStart = frameN
                 comp.tStart = t
                 comp.tStartRefresh = tThisFlipGlobal
                 win.timeOnFlip(comp, 'tStartRefresh')
                 comp.setAutoDraw(True)
 
-            if comp.status == STARTED and duration and tThisFlipGlobal > comp.tStartRefresh + duration - frameTolerance:
+            if comp.status == STARTED and duration and tThisFlipGlobal > comp.tStartRefresh + duration - FRAMETOLERANCE:
                 comp.tStop = t
                 comp.frameNStop = frameN
                 comp.setAutoDraw(False)
@@ -152,8 +154,7 @@ def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, ro
       movie_duration - (int|None) How long routine will be run 
       thisExp - (dict) PsychoPy log dictionary.
     """
-                           
-    frameTolerance = 0.005 #0.005
+
     continueRoutine = True
     t = 0
     frameN = -1
@@ -178,7 +179,7 @@ def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, ro
         frameN = frameN + 1  # number of completed frames (so 0 is the first frame)
         # update/draw components on each frame
 
-        if movie.status == NOT_STARTED and tThisFlip >= 0.0 - frameTolerance:
+        if movie.status == NOT_STARTED and tThisFlip >= 0.0 - FRAMETOLERANCE:
             # keep track of start time/frame for later
             movie.frameNStart = frameN  # exact frame index
             movie.tStart = t  # local t and not account for scr refresh
@@ -189,7 +190,7 @@ def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, ro
             movie.setAutoDraw(True)
         if movie.status == STARTED:
             # is it time to stop? (based on global clock, using actual start)
-            if tThisFlipGlobal > movie.tStartRefresh + movie_duration - frameTolerance:
+            if tThisFlipGlobal > movie.tStartRefresh + movie_duration - FRAMETOLERANCE:
                 # keep track of stop time/frame for later
                 movie.tStop = t  # not accounting for scr refresh
                 movie.frameNStop = frameN  # exact frame index
