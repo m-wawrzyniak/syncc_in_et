@@ -5,7 +5,7 @@ import numpy as np
 
 from numpy.random import random, randint, normal, shuffle, choice as randchoice
 from psychopy import sound, gui, visual, core, data, event, logging, clock, colors, layout, monitors
-import comms
+import m03_pupilcapture_comms
 import msgpack
 import psychopy.iohub as io
 from psychopy.hardware import keyboard
@@ -206,17 +206,7 @@ def setup_pupil_comms(wifi_source='hotspot_msi'):
 
     return context_master, req_master, pub_master, sub_master, context_slave, req_slave, pub_slave, sub_slave
 
-def setup_main_stimuli(win, vid1_path, vid2_path, vid3_path, photo_pos=(1, 0)):
-    # Stim init
-    print('Initializing stimuli...')
-    movie_1 = visual.MovieStim3(win, vid1_path, size=(2560, 1440))
-    print('m1 initialized...')
-    movie_2 = visual.MovieStim3(win, vid2_path, size=(2560, 1440))
-    print('m2 initialized...')
-    movie_3 = visual.MovieStim3(win, vid3_path, size=(2560, 1440))
-    print('m3 initialized...')
-    movies = {'m1': movie_1, 'm2': movie_2, 'm3': movie_3}
-    rand_movies = list(np.random.permutation(list(movies.keys())))
+def setup_main_stimuli(win, photo_pos=(1, 0)):
 
     # Photodiode rectangle init
     size = 0.1
@@ -248,7 +238,7 @@ def setup_main_stimuli(win, vid1_path, vid2_path, vid3_path, photo_pos=(1, 0)):
         )
     photo_rect_off.draw()
     win.flip()
-    return movies, rand_movies, photo_rect_on, photo_rect_off, cross
+    return photo_rect_on, photo_rect_off, cross
 
 def setup_free_convo_stimuli(win, photo_pos=(1, 0)):
 

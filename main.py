@@ -37,20 +37,18 @@ from psychopy import sound, gui, visual, core, data, event, logging, clock, colo
 import psychopy.iohub as io
 from psychopy.hardware import keyboard
 import ast
-
-# Own Imports
-import comms
-import procedure_setup
-import routines
+import numpy as np
 import pyglet
 
-# GLOBAL PARAMETERS:
+import m01_procedure_setup as procedure_setup
+import m02_psychopy_routines as routines
+import m03_pupilcapture_comms as comms
 
-WIN_ID_MASTER = 1
-WIN_ID_MAIN = 0
-WIN_SIZES = [None, None]
-WIN_SIZES[WIN_ID_MASTER] = (1920, 1080)
-WIN_SIZES[WIN_ID_MAIN] = (2560, 1440)
+from config import CALIB_ANI_1_PATH, CALIB_ANI_2_PATH, CALIB_ANI_3_PATH, MOVIE_1_PATH, MOVIE_2_PATH, MOVIE_3_PATH
+from config import WIN_ID_MASTER, WIN_ID_MAIN
+
+
+### STAGE 1: SETUP
 
 screens = pyglet.canvas.get_display().get_screens()
 """
@@ -59,15 +57,6 @@ for i, screen in enumerate(screens):
     if screen.width != WIN_SIZES[i][0] or screen.height != WIN_SIZES[i][1]:
         raise TypeError('Screen IDs are wrong!')
 """
-CALIB_ANI_1_PATH = 'C://movies_et//norm_kalib_1.mp4'
-CALIB_ANI_2_PATH = 'C://movies_et//norm_kalib_2.mp4'
-CALIB_ANI_3_PATH = 'C://movies_et//norm_kalib_3.mp4'
-
-MOVIE_1_PATH = 'C://movies_et//norm_mov1.mp4'
-MOVIE_2_PATH = 'C://movies_et//norm_mov2.mp4'
-MOVIE_3_PATH = 'C://movies_et//norm_mov3.mp4'
-
-### STAGE 1: SETUP
 
 # Specify path for log and data saving
 expInfo, thisExp, logFile, filename = procedure_setup.setup_path_log_psychopy()  # creating log files and saving paths
@@ -132,7 +121,7 @@ start_stage = int(expInfo['start at stage'][0])
 if start_stage <= 2:
 
     # 1. VERBATIM: Initialize calibration animations
-    calib_anim_1 = visual.MovieStim3(win, CALIB_ANI_1_PATH, size=(2560, 1440))
+    calib_anim_1 = visual.MovieStim(win, CALIB_ANI_1_PATH, size=(2560, 1440))
     print('calib_anim_1 initialized...')
 
     # 2. INTERRUPT: PRESS X TO BEGIN CALIB INSTRUCTION
@@ -233,7 +222,10 @@ if start_stage <= 3:
 
     # Initializing stimuli
     photo_pos = (1, 0)  # Normalized position of photodiode on the screen
-    movies, rand_movies, photo_rect_on, photo_rect_off, cross = procedure_setup.setup_main_stimuli(win, MOVIE_1_PATH, MOVIE_2_PATH, MOVIE_3_PATH, photo_pos=photo_pos)  # Setting up presented movies, photodiode marker and fixation cross
+    photo_rect_on, photo_rect_off, cross = procedure_setup.setup_main_stimuli(win, photo_pos=photo_pos)  # Setting up presented movies, photodiode marker and fixation cross
+
+    movie_paths = {'m1': MOVIE_1_PATH, 'm2': MOVIE_2_PATH, 'm3': MOVIE_3_PATH}
+    rand_movies = list(np.random.permutation(list(movie_paths.keys())))
     expInfo['mov_order'] = rand_movies  # Save the order of the movies
     cross.draw()  # Draw focus cross before the first movie
     win.flip()  # Refresh window
@@ -246,7 +238,12 @@ if start_stage <= 3:
     for i in range(len(rand_movies)):
         # Movie setup
         mov_name = rand_movies[i] # Pick movie
-        movie = movies[mov_name] # Pack it into components list
+        movie_path = movie_paths[mov_name] # Pack it into components list
+
+        print(f'Initializing {mov_name}...')
+        movie = visual.MovieStim(win, movie_path, size=(2560, 1440))
+        print(f'{mov_name} initialized.')
+
         routines.setup_routine_components([movie]) # Set it up for routine
 
         # Sending start movie annotation
@@ -254,9 +251,8 @@ if start_stage <= 3:
 
 
         # Running routine
-        movie.reset()  # Synchronize audio with video.
         routines.run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, routineTimer,
-                                      thisExp, defaultKeyboard, movie_duration=movie.duration-1 if not debug_mode else 10)
+                                      thisExp, defaultKeyboard, movie_duration=movie.duration if not debug_mode else 10)
 
         # Sending stop movie annotation
         comms.send_annotation(pub_master, pub_slave, label=f'stop_{str(mov_name)}', req_master=req_master)
