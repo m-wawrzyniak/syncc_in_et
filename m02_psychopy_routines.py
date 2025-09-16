@@ -26,7 +26,92 @@ def setup_routine_components(components):
         if hasattr(comp, 'status'):
             comp.status = NOT_STARTED
 
-def run_routine(win, routine_components, routine_timer, defaultKeyboard, msg='Running routine...', duration=None, escape_key="escape"):
+from psychopy import core, visual
+from psychopy.constants import NOT_STARTED, STARTED, FINISHED
+
+FRAMETOLERANCE = 0.001  # tweak if needed
+
+
+def run_routine(
+    win,
+    routine_components,
+    routine_timer,
+    defaultKeyboard,
+    msg="Running routine...",
+    duration=None,
+    escape_key="escape",
+):
+    """
+    Runs a PsychoPy routine segment:
+      win                - (psychopy.visual.Window) window to draw on
+      routine_components - (list) PsychoPy stimuli (TextStim, MovieStim, etc.)
+      routine_timer      - (psychopy.core.Clock) clock controlling routine
+      defaultKeyboard    - (psychopy.hardware.keyboard.Keyboard) keyboard for quit key
+      msg                - (str) debug message
+      duration           - (float|None) routine duration (s), None = until all comps finish
+      escape_key         - (str) key to abort routine
+    """
+    print(msg)
+
+    continue_routine = True
+    frameN = -1
+    routine_timer.reset()
+    _timeToFirstFrame = win.getFutureFlipTime(clock="now")
+
+    while continue_routine:
+        # Get current time
+        t = routine_timer.getTime()
+        tThisFlip = win.getFutureFlipTime(clock=routine_timer)
+        tThisFlipGlobal = win.getFutureFlipTime(clock=None)
+        frameN += 1
+
+        # Update/draw components
+        for comp in routine_components:
+            # Start
+            if comp.status == NOT_STARTED and tThisFlip >= 0.0 - FRAMETOLERANCE:
+                comp.frameNStart = frameN
+                comp.tStart = t
+                comp.tStartRefresh = tThisFlipGlobal
+                win.timeOnFlip(comp, "tStartRefresh")
+                comp.setAutoDraw(True)
+                comp.status = STARTED
+
+            # Stop after duration
+            if comp.status == STARTED and duration and t >= duration - FRAMETOLERANCE:
+                comp.tStop = t
+                comp.frameNStop = frameN
+                comp.setAutoDraw(False)
+                if isinstance(comp, visual.MovieStim):
+                    comp.stop()
+                comp.status = FINISHED
+
+        # Escape handling
+        if defaultKeyboard.getKeys(keyList=[escape_key]):
+            for comp in routine_components:
+                if isinstance(comp, visual.MovieStim):
+                    comp.stop()
+            core.quit()
+
+        # Continue only if at least one component is active
+        continue_routine = any(
+            hasattr(comp, "status") and comp.status == STARTED
+            for comp in routine_components
+        )
+
+        # Flip
+        if continue_routine:
+            win.flip()
+
+    # Cleanup at end
+    for comp in routine_components:
+        if hasattr(comp, "setAutoDraw"):
+            comp.setAutoDraw(False)
+        if isinstance(comp, visual.MovieStim):
+            comp.stop()
+
+
+
+def run_routine_old(win, routine_components, routine_timer, defaultKeyboard, msg='Running routine...', duration=None, escape_key="escape"):
     # TODO: duration is not safe, without specyfing it the code crashes
     """
     Using specific window 'win' (psychopy.visual.Window), creates routine segment with routine_componentes (list of PsychoPy stimuli) and runs it.

@@ -99,7 +99,7 @@ if start_stage <= 2:
     routines.run_routine(win_main, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_1...', duration=calib_anim_1.duration if not debug_mode else 5)  # Present the instruction
     comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_1", req_master)  # Annotate that animation has stopped
     win_main.close()  # Clean-up the Subject's window
-    del win_main
+    del calib_anim_1
 
     # 4/5. INTERRUPT: HDMI to caregiver(sl)
     routines.interrupt('Press \'x\' when caregiver (sl) monitor input is set...', win_master)
@@ -119,7 +119,7 @@ if start_stage <= 2:
         monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,
         units='height')
-    win_main.flip()
+    core.wait(2)
     print('New window created...')
 
     # 11. ROUTINE: Calibration animation 2
@@ -132,7 +132,7 @@ if start_stage <= 2:
     routines.run_routine(win_main, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_2...', duration=calib_anim_2.duration if not debug_mode else 5)  # Present the instruction
     comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_2", req_master)  # Annotate that animation has stopped
     win_main.close()  # Clean-up the Subject's window
-    del win_main
+    del calib_anim_2
 
     # 12/13. ROUTINE: Child (master) calibration
     routines.interrupt('Press \'x\' to begin master calibration...', win_master)  # Wait for the User's intervention
@@ -149,7 +149,7 @@ if start_stage <= 2:
         monitor=gigabyte_mon, color=bckgnd_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,
         units='height')
-    win_main.flip()
+    core.wait(2)
     print('New window created...')
 
     # 16. ROUTINE: Calibration animation 3
@@ -162,7 +162,7 @@ if start_stage <= 2:
     routines.run_routine(win_main, ani_components, routineTimer, defaultKeyboard, msg='Running calib_anim_3...', duration=calib_anim_3.duration if not debug_mode else 5)  # Present the instruction
     comms.send_annotation(pub_master, pub_slave, "stop_calib_anim_3", req_master)  # Annotate that animation has stopped
     win_main.close()  # Clean-up the Subject's window
-    del win_main
+    del calib_anim_3
 
 ### STAGE 3: MOVIES
 
