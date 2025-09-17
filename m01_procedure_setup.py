@@ -1,3 +1,6 @@
+"""
+Setup for logging paths, screens, windows, PsychoPy handlers, Pupil Capture communication and presented stimuli.
+"""
 import os
 import zmq
 import time
@@ -6,18 +9,18 @@ from psychopy import  gui, visual, core, data, logging, monitors
 
 import m03_pupilcapture_comms as comms
 
-from config import WIFI_IP_DICT
-
-# TODO: Proper argument and return types docstring
+from config import FREE_CONV_DURATION, FREE_CONV_INTERVAL, DEFAULT_BCKGND, PHOTODIODE_POS
+from config import WIN_ID_MAIN, WIN_ID_MASTER, WIN_SIZES
+from config import WIFI_IP_DICT, WIFI_SOURCE, MASTER_PORT, SLAVE_PORT
 
 def setup_path_log_psychopy():
     """
     Setup paths and logs for ET procedure.
 
     Returns:
-        - expInfo (dict) Dictionary of experiment information (name:value)
-        - thisExp (ExperimentHandler) ???
-        - logFile (LogFile) ???
+        - expInfo (dict): Dictionary of experiment information (name:value)
+        - thisExp (ExperimentHandler): PsychoPy handler.
+        - logFile (LogFile): PsychoPy logfile.
         - filename (str) Absolute path for saving all data and logs.
     """
 
@@ -26,14 +29,14 @@ def setup_path_log_psychopy():
     os.chdir(_thisDir)
 
     # Info about experimental session and what goes into GUI dialog
-    psychopyVersion = '2024.2.4'
+    psychopyVersion = '2025.1.1'
     expName = 'et_syncc_in_procedure'
     expInfo = {
         'participant': f"{randint(0, 999999):06.0f}",
         'session': '001',
-        'window background color': '[0.0, 0.0, 0.0]',
-        'free conversation countdown': '30',
-        'free conversation length': '180',
+        'window background color': str(DEFAULT_BCKGND),
+        'free conversation countdown': str(FREE_CONV_INTERVAL),
+        'free conversation length': str(FREE_CONV_DURATION),
         'debug mode': ['False', 'True'],
         'start at stage': ['2. Calibration', '3. Movies', '4. Free convo']
     }
@@ -51,7 +54,6 @@ def setup_path_log_psychopy():
 
     # Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
     filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
-    # TODO: Create one standardized directory with both recordings and psychopy logs/data
 
     # An ExperimentHandler isn't essential but helps with data saving
     thisExp = data.ExperimentHandler(name=expName, version='',
@@ -63,54 +65,83 @@ def setup_path_log_psychopy():
     logFile = logging.LogFile(filename + '.log', level=logging.EXP)
     logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a file
 
-
-
     return expInfo, thisExp, logFile, filename
 
-def setup_windows(win_id_master, win_id_main, background_clr = None):
+def setup_windows(background_clr:tuple|list = None):
+    """
+    Creates PsychoPy-based windows used during procedure.
+
+    Args:
+        background_clr (tuple|list) : RGB backround color
+
+    Returns:
+        win_main (Window): PsychoPy window, presented to the Subjects.
+        win_master (Window): PsychoPy window, used by the Researcher.
+        gigabyte_monitor (Monitor): PsychoPy Monitor - main, presented to the Subjects.
+        test_monitor (Monitor): PsychoPy Monitor - master PC monitor.
+
+    """
+
     all_monitors = monitors.getAllMonitors()
     print(f"Available monitors: {all_monitors}")
 
-    # Define monitor specifications
+    # monitor specs
     gigabyte_monitor = monitors.Monitor('GIGABYTE')
-    gigabyte_monitor.setWidth(52.7)  # Width in cm (adjust for your monitor)
-    gigabyte_monitor.setSizePix([2560, 1440])  # Resolution
-    gigabyte_monitor.setDistance(57)  # Distance from the screen in cm
-    gigabyte_monitor.saveMon()  # Save the monitor configuration
+    gigabyte_monitor.setWidth(52.7)
+    gigabyte_monitor.setSizePix(WIN_SIZES[WIN_ID_MAIN])
+    gigabyte_monitor.setDistance(65)
+    gigabyte_monitor.saveMon()
 
     test_monitor = monitors.Monitor('testMonitor')
-    test_monitor.setWidth(30.0)  # Width in cm (adjust for your monitor)
-    test_monitor.setSizePix([640, 480])  # Resolution
-    test_monitor.setDistance(50)  # Distance from the screen in cm
-    test_monitor.saveMon()  # Save the monitor configuration
+    test_monitor.setWidth(30.0)
+    test_monitor.setSizePix([640, 480])
+    test_monitor.setDistance(50)
+    test_monitor.saveMon()
 
     if background_clr is None:
         background_clr = [-1.0, -1.0, -1.0]
 
     win_main = visual.Window(
-        size=[2560, 1440], fullscr=True, screen=win_id_main,
+        size=WIN_SIZES[WIN_ID_MAIN], fullscr=True, screen=WIN_ID_MAIN,
         winType='pyglet', allowStencil=False,
         monitor=gigabyte_monitor, color=background_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,
-        units='norm')
+        units='norm', infoMsg='.')
     win_main.mouseVisible = True
 
     win_master = visual.Window(
-        size=[640, 480], fullscr=False, screen=win_id_master,
+        size=[640, 480], fullscr=False, screen=WIN_ID_MASTER,
         winType='pyglet', allowStencil=False,
         monitor=test_monitor, color=background_clr, colorSpace='rgb',
         blendMode='avg', useFBO=True,
-        units='norm')
+        units='norm', infoMsg='.')
     print("Windows defined")
 
     return win_main, win_master, gigabyte_monitor, test_monitor
 
-def setup_pupil_comms(wifi_source='hotspot_msi'):
+def setup_pupil_comms():
+    """
+    Setup for Python <-> PupilCapture communications.
+    Sends appropriate settings to the PupilCapture instances.
+    Creates PUB, SUB and REQ sockets for bot slave and master Pupil instances.
+    Based on ZMQ library.
 
-    addr_master, addr_slave = WIFI_IP_DICT[wifi_source]
+    Returns:
+         context_master (zmq.Context): Context for Master PC.
+         req_master (zmq.Socket): REQ socket on Master context.
+         pub_master (zmq.Socket): PUB socket on Master context.
+         sub_master (zmq.Socket): SUB socket on Master context.
+         context_slave (zmq.Context): Context for Slave PC.
+         req_slave (zmq.Socket): REQ socket on Slave context.
+         pub_slave (zmq.Socket): SUB socket on Slave context.
+         sub_slave (zmq.Socket): PUB socket on Slave context.
+
+    """
+
+    addr_master, addr_slave = WIFI_IP_DICT[WIFI_SOURCE]
 
     # Master PC - ports and connections
-    port_master = "50020"
+    port_master = str(MASTER_PORT)
     comms.check_capture_exists(addr_master, port_master, 'Master')
 
     context_master = zmq.Context()  # Context creation
@@ -134,7 +165,7 @@ def setup_pupil_comms(wifi_source='hotspot_msi'):
     print("Master ports established")
 
     # Slave PC - ports and connections
-    port_slave = "50020"
+    port_slave = str(SLAVE_PORT)
     comms.check_capture_exists(addr_slave, port_slave, 'Slave')
 
     context_slave = zmq.Context()  # Context creation
@@ -159,36 +190,36 @@ def setup_pupil_comms(wifi_source='hotspot_msi'):
     comms.notify(req_master, rec_trigger)
     comms.notify(req_slave, rec_trigger)
 
-    # Master PC - plugins
-    # sub.setsockopt_string(zmq.SUBSCRIBE, 'notify.calibration')
-    # Starting master plugins / "Time_Sync" - important for synchronising pupil cores, base_bias - higher value defines master
-    comms.notify(req_master, {"subject": "start_plugin", "name": "Annotation_Capture", "args": {}})
+    # Master PC - plugins: Annotation_Capture, Time_Sync, Log_History, Pupil_Groups
+    comms.notify(req_master,
+                 {"subject": "start_plugin", "name": "Annotation_Capture", "args": {}})
     comms.notify(req_master,
                  {"subject": "start_plugin", "name": "Time_Sync",
                   "args": {'base_bias': 1.1, 'node_name': 'sync_master'}})
-    comms.notify(req_master, {"subject": "start_plugin", "name": "Log_History", "args": {}})
+    comms.notify(req_master,
+                 {"subject": "start_plugin", "name": "Log_History", "args": {}})
     comms.notify(req_master,
                  {"subject": "start_plugin", "name": "Pupil_Groups",
                   "args": {'name': 'master_pupil', 'active_group': 'ET_exp'}})
 
-    # Slave PC - plugins
-    # sub.setsockopt_string(zmq.SUBSCRIBE, 'notify.calibration')
-
-    # Starting slave plugins
-    comms.notify(req_slave, {"subject": "start_plugin", "name": "Annotation_Capture", "args": {}})
+    # Slave PC - plugins: Annotation_Capture, Time_Sync, Log_History, Pupil_Groups
+    comms.notify(req_slave,
+                 {"subject": "start_plugin", "name": "Annotation_Capture", "args": {}})
     comms.notify(req_slave,
                  {"subject": "start_plugin", "name": "Time_Sync",
                   "args": {'base_bias': 1.0, 'node_name': 'sync_slave'}})
-    comms.notify(req_slave, {"subject": "start_plugin", "name": "Log_History", "args": {}})
+    comms.notify(req_slave,
+                 {"subject": "start_plugin", "name": "Log_History", "args": {}})
     comms.notify(req_slave,
                  {"subject": "start_plugin", "name": "Pupil_Groups",
                   "args": {'name': 'slave_pupil', 'active_group': 'ET_exp'}})
 
-    # TODO: to mozna logowac, a moze nawet zrobic check latencji
+    # Time synchronization and comms delay.
     t = time.time()
     req_master.send_string("t")
     req_master.recv_string()
-    print("Round trip Python<->Pupil command delay:", time.time() - t)
+    python_to_pupil_delay = time.time() - t
+    print("Round trip Python<->Pupil command delay:", python_to_pupil_delay)
 
     req_master.send_string("T 0.0")
     print(f'Master timesync: {req_master.recv_string()}')
@@ -199,7 +230,20 @@ def setup_pupil_comms(wifi_source='hotspot_msi'):
 
     return context_master, req_master, pub_master, sub_master, context_slave, req_slave, pub_slave, sub_slave
 
-def setup_main_stimuli(win, photo_pos=(1, 0)):
+def setup_photodiode(win, photo_pos=PHOTODIODE_POS):
+    """
+    Setup for photodiode crude communications - blinking black-and-white box, registered by photodiode connected to EEG.
+    Also creates the fixation cross.
+
+    Args:
+        win (Window): Main PsychoPy window.
+        photo_pos: Normalized box position on the win.
+
+    Returns:
+        photo_rect_on (visual.Rect): Onset photodiode rectangle - white box.
+        photo_rect_off (visual.Rect): Offset photodiode rectangle - blackbox.
+        cross (visual.ShapeStim): Fixation cross.
+    """
 
     # Photodiode rectangle init
     size = 0.1
@@ -207,7 +251,8 @@ def setup_main_stimuli(win, photo_pos=(1, 0)):
         win=win, name='photo_rect_on',
         width=size * (9 / 16), height=size, units='norm',
         ori=0.0, pos=photo_pos, anchor='bottom-right',
-        lineWidth=1.0, colorSpace='rgb', lineColor='white', fillColor='white',
+        lineWidth=1.0, colorSpace='rgb',
+        lineColor='white', fillColor='white',
         opacity=None, depth=0.0, interpolate=True)
 
     size = 0.1
@@ -215,44 +260,21 @@ def setup_main_stimuli(win, photo_pos=(1, 0)):
         win=win, name='photo_rect_off',
         width=size * (9 / 16), height=size, units='norm',
         ori=0.0, pos=photo_pos, anchor='bottom-right',
-        lineWidth=1.0, colorSpace='rgb', lineColor='black', fillColor='black',
+        lineWidth=1.0, colorSpace='rgb',
+        lineColor='black', fillColor='black',
         opacity=None, depth=0.0, interpolate=True)
 
     # Cross stimuli init
     cross = visual.ShapeStim(
         win=win,
-        vertices='cross',  # Define shape as a cross
-        size=(2,2),  # Size of the cross (width and height)
-        lineWidth=1,  # Line thickness
-        lineColor='black',  # Line color (white)
-        fillColor='black',  # Fill color (white)
-        units='cm',  # Use normalized units
-        pos=(0, 0)  # Center of the screen
+        vertices='cross',
+        size=(2,2),
+        lineWidth=1,
+        lineColor='black',
+        fillColor='black',
+        units='cm',
+        pos=(0, 0)
         )
-    photo_rect_off.draw()
+    photo_rect_off.draw() # draw black-box immediately
     win.flip()
     return photo_rect_on, photo_rect_off, cross
-
-def setup_free_convo_stimuli(win, photo_pos=(1, 0)):
-
-    # Photodiode rectangle init
-    size = 0.1
-    photo_rect_on = visual.Rect(
-        win=win, name='photo_rect_on',
-        width=size * (9 / 16), height=size, units='norm',
-        ori=0.0, pos=photo_pos, anchor='bottom-right',
-        lineWidth=1.0, colorSpace='rgb', lineColor='white', fillColor='white',
-        opacity=None, depth=0.0, interpolate=True)
-
-    size = 0.1
-    photo_rect_off = visual.Rect(
-        win=win, name='photo_rect_off',
-        width=size * (9 / 16), height=size, units='norm',
-        ori=0.0, pos=photo_pos, anchor='bottom-right',
-        lineWidth=1.0, colorSpace='rgb', lineColor='black', fillColor='black',
-        opacity=None, depth=0.0, interpolate=True)
-
-
-    photo_rect_off.draw()
-    win.flip()
-    return photo_rect_on, photo_rect_off

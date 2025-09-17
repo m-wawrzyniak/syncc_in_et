@@ -1,22 +1,23 @@
-from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
-                                STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
-from psychopy import visual, core, event, sound
+"""
+Contains full PsychoPy-like procedures.
+"""
+
+from psychopy import core, visual, event, sound
+from psychopy.constants import NOT_STARTED, STARTED, FINISHED
 import msgpack as serializer
+from zmq.asyncio import Socket
 
 import m03_pupilcapture_comms as comms
 
 from config import FRAMETOLERANCE
 
-"""
-These functions are mostly based on common code segments used in PsychoPy
-They mostly serve to handle PsychoPy stimuli, windows and routine loops.
-"""
 
-# TODO: Proper argument and return types docstring
-
-def setup_routine_components(components):
+def setup_routine_components(components:list):
     """
-    Initialize routine components.
+    General function for initializing routine components.
+
+    Args:
+        components (list): List of PsychoPy components e.g. visual.MovieStim etc.
     """
     for comp in components:
         comp.tStart = None
@@ -25,12 +26,6 @@ def setup_routine_components(components):
         comp.tStopRefresh = None
         if hasattr(comp, 'status'):
             comp.status = NOT_STARTED
-
-from psychopy import core, visual
-from psychopy.constants import NOT_STARTED, STARTED, FINISHED
-
-FRAMETOLERANCE = 0.001  # tweak if needed
-
 
 def run_routine(
     win,
@@ -59,15 +54,15 @@ def run_routine(
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
 
     while continue_routine:
-        # Get current time
+        # get current time
         t = routine_timer.getTime()
         tThisFlip = win.getFutureFlipTime(clock=routine_timer)
         tThisFlipGlobal = win.getFutureFlipTime(clock=None)
         frameN += 1
 
-        # Update/draw components
+        # update/draw components
         for comp in routine_components:
-            # Start
+            # start routine
             if comp.status == NOT_STARTED and tThisFlip >= 0.0 - FRAMETOLERANCE:
                 comp.frameNStart = frameN
                 comp.tStart = t
@@ -76,7 +71,7 @@ def run_routine(
                 comp.setAutoDraw(True)
                 comp.status = STARTED
 
-            # Stop after duration
+            # stop routine after duration
             if comp.status == STARTED and duration and t >= duration - FRAMETOLERANCE:
                 comp.tStop = t
                 comp.frameNStop = frameN
@@ -85,93 +80,37 @@ def run_routine(
                     comp.stop()
                 comp.status = FINISHED
 
-        # Escape handling
+        # escape handling
         if defaultKeyboard.getKeys(keyList=[escape_key]):
             for comp in routine_components:
                 if isinstance(comp, visual.MovieStim):
                     comp.stop()
             core.quit()
 
-        # Continue only if at least one component is active
+        # continue if some components are still STARTED
         continue_routine = any(
             hasattr(comp, "status") and comp.status == STARTED
             for comp in routine_components
         )
 
-        # Flip
         if continue_routine:
             win.flip()
 
-    # Cleanup at end
+    # cleanup
     for comp in routine_components:
         if hasattr(comp, "setAutoDraw"):
             comp.setAutoDraw(False)
         if isinstance(comp, visual.MovieStim):
             comp.stop()
 
-
-
-def run_routine_old(win, routine_components, routine_timer, defaultKeyboard, msg='Running routine...', duration=None, escape_key="escape"):
-    # TODO: duration is not safe, without specyfing it the code crashes
+def interrupt(msg:str, win:visual.Window, keys:tuple=('x',)):
     """
-    Using specific window 'win' (psychopy.visual.Window), creates routine segment with routine_componentes (list of PsychoPy stimuli) and runs it.
-      routine_timer - (psychopy.core.Clock) Internal PsychoPy Clock
-      defaultKeyboard - (psychopy.keyboard.Keyboard) Keyboard used for User interface.
-      msg - (str) Message printed when run.
-      duration - (int|None) How long routine will be run 
-      escape_key - (str) String representation of the key which can be used to leave the routine. 
-    """
-    print(msg)
-
-    continue_routine = True
-    t = 0
-    frameN = -1
-    routine_timer.reset()
-    _timeToFirstFrame = win.getFutureFlipTime(clock="now")
-
-    while continue_routine:
-        # Get current time
-        t = routine_timer.getTime()
-        tThisFlip = win.getFutureFlipTime(clock=routine_timer)
-        tThisFlipGlobal = win.getFutureFlipTime(clock=None)
-        frameN += 1
-
-        # Update/draw components
-        for comp in routine_components:
-            if comp.status == NOT_STARTED and tThisFlip >= 0.0 - FRAMETOLERANCE:
-                comp.frameNStart = frameN
-                comp.tStart = t
-                comp.tStartRefresh = tThisFlipGlobal
-                win.timeOnFlip(comp, 'tStartRefresh')
-                comp.setAutoDraw(True)
-
-            if comp.status == STARTED and duration and tThisFlipGlobal > comp.tStartRefresh + duration - FRAMETOLERANCE:
-                comp.tStop = t
-                comp.frameNStop = frameN
-                comp.setAutoDraw(False)
-
-        # Check for quit
-        if defaultKeyboard.getKeys(keyList=[escape_key]):
-            core.quit()
-
-        # Check if all components are finished
-        continue_routine = any(
-            hasattr(comp, "status") and comp.status == STARTED for comp in routine_components
-        )
-
-        # Refresh the screen
-        if continue_routine:
-            win.flip()
-
-    # End routine: stop components
-    for comp in routine_components:
-        if hasattr(comp, "setAutoDraw"):
-            comp.setAutoDraw(False)
-
-def interrupt(msg, win, keys=('x',)):
-    '''
     Prints msg (str) at win (psychopy.visual.Window) and waits for the User to press on of the keys (tuple)
-    '''
+    Args:
+        msg (str): Text message shown at Master PC PsychoPy window.
+        win (visual.Window): Window.
+        keys (tuple): User input keys.
+    """
     print(msg)
     message = visual.TextStim(win, text=msg, color='white')
     message.draw()
@@ -179,14 +118,23 @@ def interrupt(msg, win, keys=('x',)):
     _ = event.waitKeys(keyList=keys)
     win.flip()
 
-def run_calibration(req_port, sub_port, debug_mode=False):
-    # TODO: Moze by tak upewniac sie ze kamery obu oczy sa wlaczone? wlasnie stracilismy na tym 5 min
-    '''
+def run_calibration(req_port:Socket, sub_port:Socket, debug_mode:bool=False):
+    """
     Runs calibration at specific PC, based on chosen req_port and sub_port (Context.socket).
     Evaluates whether the calibration quality is satisfactory and gives the User a choice to accept the quality
     or redo the calibration.
     debug_mode = True -> there is only a dummy calibration
-    '''
+
+    Args:
+        req_port (zmq.Socket): REQ socket for specific PC PupilCapture instance.
+        sub_port (zmq.Socket): SUB socket for specific PC PupilCapture instance.
+        debug_mode (bool): Debug mode - no calibration started at PupilCapture.
+
+    Returns:
+        ang_acc (float): Resulting angular accuracy of ET after the calibration.
+        ang_prec (float): Resulting angular precision of ET after the calibration.
+
+    """
     calib_done = False
     ang_acc, ang_prec = 0, 0
 
@@ -232,12 +180,20 @@ def run_calibration(req_port, sub_port, debug_mode=False):
 def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, routineTimer, thisExp, defaultKeyboard,
                          movie_duration=None):
     """
-    Using specific window 'win' (psychopy.visual.Window), creates routine segment with predefined stimuli: movies, photodiode marker and fixation cross.
-      routineTimer - (psychopy.core.Clock) Internal PsychoPy Clock
-      defaultKeyboard - (psychopy.keyboard.Keyboard) Keyboard used for User interface.
-      msg - (str) Message printed when run.
-      movie_duration - (int|None) How long routine will be run 
-      thisExp - (dict) PsychoPy log dictionary.
+    Movie stimulus presentation routine.
+    Using specific window 'win' (psychopy.visual.Window), creates routine segment with predefined stimuli:
+    movies, photodiode marker and fixation cross.
+
+    Args:
+        win (Window): Window at which the stimulus will be presented.
+        mov_name (str): Name of the movie.
+        movie (visual.MovieStim): PsychoPy movie stimulus.
+        photo_rect_on (visual.Rect): Photodiode onset marker.
+        photo_rect_off (visual.Rect): Photodiode offset marker.
+        routineTimer (psychopy.core.Clock): PsychoPy routine clock.
+        thisExp (dict): PsychoPy log dictionary.
+        defaultKeyboard (psychopy.keyboard.Keyboard): Keyboard used for User interface.
+        movie_duration (int|None): How long the routine will be run. If None, it will be played as long as the movie.
     """
 
     continueRoutine = True
@@ -249,7 +205,6 @@ def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, ro
         movie_duration = movie.duration
 
     # Photodiode setup
-    photo_rect_duration = movie_duration
     photo_toggle_time = 0.5
     last_toggle_time = 0
     toggle_cnt = 0
@@ -261,29 +216,26 @@ def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, ro
         t = routineTimer.getTime()
         tThisFlip = win.getFutureFlipTime(clock=routineTimer)
         tThisFlipGlobal = win.getFutureFlipTime(clock=None)
-        frameN = frameN + 1  # number of completed frames (so 0 is the first frame)
-        # update/draw components on each frame
+        frameN = frameN + 1
 
+        # routine start
         if movie.status == NOT_STARTED and tThisFlip >= 0.0 - FRAMETOLERANCE:
-            # keep track of start time/frame for later
-            movie.frameNStart = frameN  # exact frame index
-            movie.tStart = t  # local t and not account for scr refresh
-            movie.tStartRefresh = tThisFlipGlobal  # on global time
+            movie.frameNStart = frameN
+            movie.tStart = t  # local time
+            movie.tStartRefresh = tThisFlipGlobal  # global time
             win.timeOnFlip(movie, 'tStartRefresh')  # time at next scr refresh
-            # add timestamp to datafile
-            thisExp.timestampOnFlip(win, '{}.started'.format(mov_name))
+            thisExp.timestampOnFlip(win, '{}.started'.format(mov_name))  # add timestamp to datafile
             movie.setAutoDraw(True)
+        # routine started
         if movie.status == STARTED:
-            # is it time to stop? (based on global clock, using actual start)
+            # if duration is exceeded, stop autodraw
             if tThisFlipGlobal > movie.tStartRefresh + movie_duration - FRAMETOLERANCE:
-                # keep track of stop time/frame for later
-                movie.tStop = t  # not accounting for scr refresh
-                movie.frameNStop = frameN  # exact frame index
-                # add timestamp to datafile
+                movie.tStop = t
+                movie.frameNStop = frameN
                 thisExp.timestampOnFlip(win, '{}.stopped'.format(mov_name))
                 movie.setAutoDraw(False)
 
-        # Alternating the visual stimuli
+        # photodiode communication - toggle count is equal to movie ID!
         if (tThisFlipGlobal >= last_toggle_time + photo_toggle_time) and (toggle_cnt <= movie_id * 2):
             last_toggle_time = tThisFlipGlobal
             if not photo_is_on:
@@ -295,20 +247,18 @@ def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, ro
             photo_is_on = not photo_is_on
             toggle_cnt += 1
 
-        # check for quit (typically the Esc key)
+        # escape handling
         if defaultKeyboard.getKeys(keyList=["escape"]):
             core.quit()
 
-        # check if all components have finished
-        if not continueRoutine:  # a component has requested a forced-end of Routine
+        # breaking the routine
+        if not continueRoutine:
             break
-        continueRoutine = False  # will revert to True if at least one component still running
+        continueRoutine = False
         for thisComponent in [movie]:
             if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                 continueRoutine = True
-                break  # at least one component has not yet finished
-
-        # refresh the screen
+                break
         if continueRoutine:  # don't flip if this routine is over or we'll get a blank screen
             win.flip()
 
@@ -322,35 +272,74 @@ def run_stimulus_routine(win, mov_name, movie, photo_rect_on, photo_rect_off, ro
     photo_rect_on.setAutoDraw(False)
     photo_rect_off.setAutoDraw(True)
 
+def _show_countdown(duration, win, timer, text_stim, text_content, key_list: tuple = ("escape",)):
+    """
+    Countdown handler used in free conversation routine.
+
+    Args:
+        duration (int):
+        win (Window):
+        timer (psychopy.core.Clock):
+        text_stim (visual.Text):
+        text_content (str):
+        key_list (tuple):
+
+    Returns:
+        None|str
+
+    """
+    timer.reset()
+    while timer.getTime() < duration:
+        remaining = int(duration - timer.getTime())
+        text_stim.text = f"{text_content}: {remaining} s"
+        text_stim.draw()
+        win.flip()
+
+        keys = event.getKeys(keyList=key_list)
+        if "escape" in keys:
+            core.quit()
+        elif "x" in keys:
+            return "x"
+    return None
 
 def run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
                            req_master, pub_master, pub_slave,
-                           convo_countdown, convo_len, routineTimer, thisExp, defaultKeyboard):
+                           convo_countdown, convo_len, routineTimer):
+    """
+    Free conversation routine.
 
-    noet = False
-    if req_master is None or pub_master is None or pub_slave is None:
-        noet = True
+    Args:
+        win (Window): Presentation window - win_main.
+        win_master (Window): Researcher window at Master Pc.
+        photo_rect_on (visual.Rect): Photodiode onset marker.
+        photo_rect_off (visual.Rect): Photodiode offset marker.
+        req_master (zmq.Socket): REQ socket for Master PC PupilCapture instance.
+        pub_master (zmq.Socket): PUB socket for Master PC PupilCapture instance.
+        pub_slave (zmq.Socket): REQ socket for Slave PC PupilCapture instance.
+        convo_countdown (int): Countdown duration prior to conversation.
+        convo_len (int): Conversation duration.
+        routineTimer (psychopy.core.Clock): Local routine timer.
+    """
+    # marker - countdown starting
+    comms.send_annotation(pub_master, pub_slave, f"start_countdown_free", req_master)
 
-    if not noet:
-        comms.send_annotation(pub_master, pub_slave, f"start_countdown_free", req_master)
-
+    # timer prep
     routineTimer.reset()
     frameN = -1
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
 
-    # Tekst countdownu na win_master
-    countdown_text = visual.TextStim(win_master, text="", height=0.1, color='white', pos=(0, 0))
 
-    # --- FAZA 0: Odczekanie 30 sekund z countdownem ---
+    # stage 0: countdown
+    countdown_text = visual.TextStim(win_master, text="", height=0.1, color='white', pos=(0, 0))
     wait_timer = core.Clock()
-    response = show_countdown(convo_countdown, win_master, wait_timer, countdown_text, "Rozbieg. Pozostało:")
+    response = _show_countdown(convo_countdown, win_master, wait_timer, countdown_text, "Countdown. Time left:")
     if response == "x":
         return
 
-    # --- FAZA 1: Miganie fotodiody + dźwięk ---
-    photo_toggle_time = 1  # sekundy
+    # stage 1: photodiode comms and audio signal
+    photo_toggle_time = 1
     toggle_cnt = 0
-    max_toggles = 4  # 2 pelne migniecia (on/off)
+    max_toggles = 4
     photo_is_on = False
     last_toggle_time = 0
 
@@ -380,22 +369,23 @@ def run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
     photo_rect_on.setAutoDraw(False)
     photo_rect_off.setAutoDraw(True)
 
-    if not noet:
-        comms.send_annotation(pub_master, pub_slave, "start_free_convo", req_master)
+    # marker - conversation start
+    comms.send_annotation(pub_master, pub_slave, "start_free_convo", req_master)
+    # audio signal
     beep = sound.Sound("C", secs=1.0, stereo=True)
     beep.play()
 
-    # --- FAZA 2: 3 minuty swobodnej rozmowy ---
+    # stage 2: free conversation
     wait_timer = core.Clock()
-    response = show_countdown(convo_len, win_master, wait_timer, countdown_text, 'Swobodna rozmowa. Pozostało:')
+    response = _show_countdown(convo_len, win_master, wait_timer, countdown_text, 'Free conversation. Time left:')
     if response == "x":
-        pass  # Przerywa 3 minuty wcześniej
+        pass
 
-    # --- FAZA 3: Miganie fotodiody + dźwięk ---
+    # stage 3: photodiode comms and audio signal
     beep = sound.Sound("C", secs=1.0, stereo=True)
     beep.play()
-    if not noet:
-        comms.send_annotation(pub_master, pub_slave, "stop_free_convo", req_master)
+    # marker - conversation finished
+    comms.send_annotation(pub_master, pub_slave, "stop_free_convo", req_master)
 
     routineTimer.reset()
     toggle_cnt = 0
@@ -425,18 +415,3 @@ def run_free_convo_routine(win, win_master, photo_rect_on, photo_rect_off,
     photo_rect_on.setAutoDraw(False)
     photo_rect_off.setAutoDraw(True)
     routineTimer.reset()
-
-def show_countdown(duration, win, timer, text_stim, text_content, key_list=["escape"]):
-    timer.reset()
-    while timer.getTime() < duration:
-        remaining = int(duration - timer.getTime())
-        text_stim.text = f"{text_content}: {remaining} s"
-        text_stim.draw()
-        win.flip()
-
-        keys = event.getKeys(keyList=key_list)
-        if "escape" in keys:
-            core.quit()
-        elif "x" in keys:
-            return "x"
-    return None
