@@ -1,53 +1,150 @@
 # SYNCC-IN Eyetracking Procedure
 
+This repository contains research software for running a **multimodal registration paradigm** involving child–parent dyads, combining **eye tracking (ET)** with **EEG**.  
+Developed within the **SYNCC-IN project** (University of Warsaw).
 
-## Naming and definitions:
+The system integrates:  
+- **Two Pupil Core eye trackers** (child and parent)  
+- **EEG amplifier synchronization** (via photodiode signalization)  
+- **Stimulus presentation** (Pixar movie clips + conversation prompts)  
+- **Custom experiment control and logging** (PsychoPy GUI + command-line interface)  
 
-1. **Master PC** - PC on which the main procedure script is run. It is also supposed to be the PC which captures Child Subject ET data.
-2. **Slave PC** - PC meant to capture Parent Subject ET data.
-3. **User** - researcher operating the Master PC, responsible for ET registration.
-4. **Subject** - child and parent dyad.
-5. **Exec. monitor** - the monitor on which all stimuli meant for the Subjects are displayed.
-6. **ET** - Eye-Tracking
-7. **Main video** - snippets from Pixar movies, the main stimuli meant to be presented to the subjects.
+---
 
-## Paradigm timeline:
-### As of 26.06 at the University of Warsaw
+## Overview
 
-1. Both child and parent Subjects are already prepared for the procedure, according to ET Environment Preparation Guidelines. 
-2. Senior researcher instructs the Subjects about the video presentation procedure. 
-3. Senior researcher signals the readiness to the User.
-4. User begins the procedure by executing run_procedure.bat
-5. Command-line UI and simplified PsychoPy GUI open up. PsychPy GUI serves as a mean to input the logging data such as pseudo-anonymous subject dyad code.
-6. User inputs the logging data and proceeds further by pressing 'OK'.
-7. Throughout ET calibration, cartoon-like animation is presented, instructing the Subjects about their task in upcoming calibration procedure.
-   1. The first part of calibration animation is initialized and awaits for User permission to continue.  
-   2. The first part of calibration anim. is presented to Subjects. Once finished, awaits User input.
-   3. The calibration of parent Subject is carried out. Awaits User input. NOTE: User can choose to repeat the calibration if the quality metrics were unsatisfactory.
-   4. The second part of calib. anim. is initialized. Awaits User input.
-   5. The calibration of child Subject is carried out. Awaits User input. NOTE: User can choose to repeat the calibration if the quality metrics were unsatisfactory.
-   6. The third part od calib. anim. is initialized and presented.
-8. The recording on both Subjects' ET devices begins.
-9. Fixation cross is presented on exec. monitor. 
-10. Three main videos are initialized. Photodiode signalization display is initialized. Awaits User input.
-11. Main stimulation procedure:
-    1. Fixation cross is removed.
-    2. One of the main videos is randomly sampled (without replacement).
-    3. Chosen main video is presented on exec. monitor.
-    4. During the first 2-3 seconds of video presentation, photodiode signalization display informs EEG amplifier which video has just began.
-    5. Once the video finishes (~60s), fixation cross is presented for 10 seconds.
-    6. Repeats from step one until all three videos have been presented.
-12. The recording on ET devices is finished. The script is on stand-by.
-13. User informs senior researcher that the main stimulation procedure is finished.
-14. Senior researcher instructs the Subjects about unrestricted conversation procedure.
-15. Unrestricted conversation procedure:
-    1. Senior researcher describes the topic to the Subjects 
-    2. Senior researcher signals the readiness to the User. 
-    3. User starts the unrestricted conversation procedure. The recording on both ET devices is started.
-    4. Timer appears on the PsychoPy GUI. It counts down 30s, during which both Senior Researcher and User leave the room.
-    5. After 30s, audio signal (C note) is played for 1s. After the signal, the Subjects are supposed to converse for 180s.
-    6. Once the 180s are counted down by the script, another audio signal is executed. Subjects are supposed to stop conversing, Senior Researcher and User enter the room. The recording on both ET devices is stopped.
-    7. The script awaits User input.
-    8. Repeat from step 1 until both topic were covered.
+The paradigm is divided into three main phases:  
 
-16. The script shuts down both UI and saves data logs to prespecified directory.
+1. **Calibration**
+   - Child and parent ET calibration
+   - Animated cartoon instructing the child about the calibration
+   - Optional calibration repetition
+
+1. **Main stimulation**
+   - Randomized presentation of three short Pixar movie clips  
+   - Photodiode signalization during stimulus onset for EEG synchronization  
+
+2. **Unrestricted conversation**  
+   - Audio-cued free conversation between child and parent (two topics, 3 minutes each)  
+   - Both ET devices and EEG continue recording  
+
+This design enables **precise temporal alignment** of multimodal signals (ET, EEG, audio, video) during naturalistic parent–child interaction.  
+
+---
+
+## Key Features
+
+- **Multimodal synchronization**  
+  - Dual eye-tracking streams (child + parent)  
+  - EEG amplifier synchronization via photodiode  
+  - Stimulus onset and offsets logged automatically  
+
+- **Automated experiment flow**  
+  - Stepwise calibration with animated instructions  
+  - Randomized video stimulus presentation  
+  - Controlled free-conversation blocks with audio cues  
+
+- **Experiment control**  
+  - Hybrid command-line + PsychoPy GUI interface  
+  - Logging of pseudo-anonymous subject IDs  
+  - Clear user prompts for calibration, repetition, and procedure continuation  
+  - Real-time communication between Python scripts and Pupil Capture instances via **pylsl** over Wi-Fi 
+
+- **Data handling**  
+  - Logs saved in `data/` subfolder  
+  - Eye-tracking recordings stored by **Pupil Capture v3.5.1**  
+  - Synchronization signals embedded in ET and EEG streams  
+
+---
+
+## Requirements
+
+- **Python**: 3.10  
+- **Dependencies**: listed in `requirements.txt`  
+- **Operating system**: Windows 10/11  
+- **Hardware setup**:  
+  - Two PCs (Master + Slave)  
+  - Two Pupil Core ET devices  
+  - EEG amplifier with photodiode input  
+  - Shared display (executive monitor for stimuli)  
+
+---
+
+## Usage
+
+The main entry point is:
+
+```bash
+run_procedure.bat
+```
+
+This launches:
+
+- Command-line interface
+
+- Simplified PsychoPy GUI for dyad ID input and procedure control
+
+## Procedure outline
+
+1. **Calibration**
+
+    - Animated instruction - part 1
+    - Parent calibration > quality check > repeat if needed
+    - Animated instruction - part 2
+    - Child calibration > quality check > repeat if needed
+    - Animated instruction - part 3
+
+2. **Main stimulation**
+
+    - Randomized Pixar clips (~60s each)
+    - Pupil Capture annotations and photodiode markers during onset and offset
+    - Fixation cross between trials
+
+3. **Unrestricted conversation**
+
+    - Two topics - 3 minutes each
+
+    - Audio cues for start/stop
+
+    - Countdown timer displayed for the User
+
+See PARADIGM.md for the full, detailed paradigm timeline.
+
+## Data & Outputs
+
+- **ET recordings** > handled by Pupil Capture (formats: video, gaze, world data depending on configuration)
+
+- **Logs** > stored locally in data/ subfolder
+
+- **EEG markers** > photodiode signal encodes stimulus onset for synchronization
+
+## Repository Structure
+
+```bash
+SYNCC-IN/
+│
+├── data/                # Experiment logs (auto-generated)
+├── misc/                # Helper Python scripts.
+├── config.py            # Configuration and hyperparameters
+├── m00_configuration_setup.py      # Paths setup, names etc.
+├── m01_procedure_setup.py          # Procedure setup, PsychoPy objects, communication etc.
+├── m02_psychopy_routines.py        # PsychoPy routines handling
+├── m03_pupilcapture_comms.py       # Pupil Capture communications handling
+├── main.py              # Main executable script
+├── PARADIGM.md          # Paradigm timeline
+├── README.md            # README
+├── requirements.txt     # Python dependencies
+└── run_procedure.bat    # Win entry point
+
+
+```
+
+## Attribution
+
+Developed by **Mateusz Wawrzyniak** within the **SYNCC-IN project**, University of Warsaw.
+
+With additional contributions in the early project stages by **Maciej Padarz**.
+
+This software is released under the MIT License.
+
+Partner laboratories are welcome to reuse or adapt the codebase.
