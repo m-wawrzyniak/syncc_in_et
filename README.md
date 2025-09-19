@@ -7,7 +7,9 @@ The system integrates:
 - **Two Pupil Core eye trackers** (child and parent)  
 - **EEG amplifier synchronization** (via photodiode signalization)  
 - **Stimulus presentation** (Pixar movie clips + conversation prompts)  
-- **Custom experiment control and logging** (PsychoPy GUI + command-line interface)  
+- **Custom experiment control and logging** (PsychoPy GUI + command-line interface)
+
+For details on the **hardware setup** (AprilTag mounting and photodiode integration), see the companion guide on Instructables: [Mobile Eye Tracking Display Setup With EEG Amplifier](https://www.instructables.com/Mobile-Eye-Tracking-Display-Setup-With-EEG-Amplifi/).
 
 ---
 
